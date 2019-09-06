@@ -1,0 +1,5 @@
+profile: service
+defaultPackage: au.org.biodiversity.mapper
+---
+testFramework: spock
+sourceLanguage: groovy

@@ -1,0 +1,20 @@
+micronaut:
+  application:
+    name: mapper-mn
+---
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/nsl
+    username: nsl
+    password: nsl
+    driverClassName: org.postgresql.Driver
+    autoCommit: false
+    schema: mapper
+---
+endpoints:
+  health:
+    enabled: true
+    details-visible: ANONYMOUS
+    jdbc:
+      encabled: true
+
