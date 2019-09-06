@@ -57,3 +57,6 @@ shadowJar {
 run.classpath += configurations.developmentOnly
 run.jvmArgs('-noverify', '-XX:TieredStopAtLevel=1', '-Dcom.sun.management.jmxremote',
         "-Dmicronaut.config.files=${System.getProperty("user.home")}/.nsl/nsl-mapper-config-mn.groovy" )
+
+test.jvmArgs('-noverify', '-XX:TieredStopAtLevel=1', '-Dcom.sun.management.jmxremote',
+        "-Dmicronaut.config.files=./src/test/resource/nsl-mapper-config-mn.groovy" )

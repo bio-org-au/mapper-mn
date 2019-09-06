@@ -21,6 +21,6 @@ class MatchingInfo {
 
     private static List<String> findBits(String s) {
         Matcher matcher = (s =~ '^/?(.*?)(/api/.*?)?(\\.json|\\.xml|\\.rdf|\\.html)?$')
-        return matcher[0] as ArrayList<String>
+        matcher[0] as ArrayList<String>
     }
 }

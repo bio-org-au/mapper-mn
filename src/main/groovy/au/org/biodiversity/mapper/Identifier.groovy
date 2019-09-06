@@ -1,8 +1,6 @@
 package au.org.biodiversity.mapper
 
-import groovy.sql.GroovyResultSet
 
-import javax.inject.Inject
 import java.sql.Timestamp
 
 /**
@@ -25,7 +23,11 @@ class Identifier {
     String updatedBy
     Long preferredUriID
 
-
+    /**
+     * @param mappingService
+     * @param values map of values
+     * @param prefix default i_
+     */
     Identifier(MappingService mappingService, Map values, String prefix = 'i_') {
         this.mappingService = mappingService
         if (!values) {
@@ -49,7 +51,7 @@ class Identifier {
 
     String toString() {
         if (deleted) {
-            return "$id: $objectType, $nameSpace, $idNumber, deleted because: $reasonDeleted, Updated By: $updatedBy at $updatedAt"
+            return "$id: $objectType, $nameSpace, $idNumber, deleted because: \"$reasonDeleted\", Updated By: $updatedBy at $updatedAt"
         }
         return "$id: $objectType, $nameSpace, $idNumber, Updated By: $updatedBy at $updatedAt"
     }

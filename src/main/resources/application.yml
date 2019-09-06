@@ -10,11 +10,4 @@ datasources:
     driverClassName: org.postgresql.Driver
     autoCommit: false
     schema: mapper
----
-endpoints:
-  health:
-    enabled: true
-    details-visible: ANONYMOUS
-    jdbc:
-      encabled: true
 
