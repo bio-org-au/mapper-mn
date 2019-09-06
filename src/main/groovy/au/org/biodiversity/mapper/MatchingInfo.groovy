@@ -13,7 +13,7 @@ class MatchingInfo {
     String extension
 
     MatchingInfo(URI uri) {
-        List<String> parts = findBits(uri.toString())
+        List<String> parts = findBits(URLDecoder.decode(uri.toString(), 'UTF-8'))
         path = parts[1]
         api = parts[2] ?: ''
         extension = parts[3] ?: ''
