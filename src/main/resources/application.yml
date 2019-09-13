@@ -1,6 +1,25 @@
 micronaut:
   application:
     name: mapper-mn
+#  router:
+#    static-resources:
+#      swagger:
+#        paths: classpath:META-INF/swagger
+#        mapping: /swagger/**
+  security:
+    enabled: true
+    endpoints:
+      login:
+        enabled: true
+      oauth:
+        enabled: true
+    token:
+      jwt:
+        enabled: true
+        signatures:
+          secret:
+            generator:
+              secret: thisiscoolbutstillshouldbechanged
 ---
 datasources:
   default:
@@ -10,4 +29,9 @@ datasources:
     driverClassName: org.postgresql.Driver
     autoCommit: false
     schema: mapper
+    socketTimeout: 30
+---
+mapper:
+  brokerRegex: ^(https?://[^/]*)?/broker/(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
+  urlRegex: ^(https?://[^/]*)?/?(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
 

@@ -1,0 +1,107 @@
+= Mapper V2.0
+v2.0, September 2019
+:toc: left
+:toclevels: 4
+:toc-class: toc2
+:icons: font
+:imagesdir: resources/images/
+:stylesdir: resources/style/
+:stylesheet: asciidoctor.css
+:description: Mapper documentation
+:keywords: documentation, Grails, Mapper, NSL, V2.0, micronaut
+:links:
+:numbered:
+:sectlinks:
+
+Mapper moved to Micronaut framework.
+
+== Introduction
+
+The *Mapper* maps URI *identifiers* to *resources* based on content negotiation. It is the place an ID is created and
+mapped to a resource.
+
+From that point on the mapped URI becomes a *permalink* that will always resolve.
+
+The mapper manages de-duplication of resources by allowing you to move a mapping from one resource identifier to
+another. It also manages deletion of resources allowing you to provide a reason for deleting a resource, which is
+returned with a 410 GONE http response.
+
+You can map a URI to different servers based on the content type requested, e.g. JSON, XML, RDF, HTML.
+
+== Changes
+
+* The broker endpoint is only for resolving IDs. In V1 preferred host and link were also obtained from the
+`/broker/preferredLink` endpoint. This complicated the URL resolution for straight redirection brokering
+(e.g. a resource proxy) and the API.
+* all API calls are now under the `/api/blah`
+* endpoints are moving from camel case to skewer case ie. `/broker/preferredHost` -> `/api/preferred-host`
+* only serving up JSON, we will not respond with xml on our mapper API as it's not used
+
+== Configuration
+
+The broker uses Regex to pull apart the resolution requests. The Regex used for the broker expects there to be a /broker
+in the context path. If you have a proxy in front of the mapper you may need to adjust the context path in this Regex.
+
+You can set it in the nsl-mapper-config-mn.groovy or change the application.yml in the classpath. set the `mapper.brokerRegex`
+in the configuration (see below).
+
+The `urlRegex` shouldn't need to be changed, that is used by the mapper to get identities from a given URL.
+
+[source, yaml]
+.application.yml
+----
+mapper:
+  brokerRegex: ^(https?://[^/]*)?/broker/(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
+  urlRegex: ^(https?://[^/]*)?/?(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
+----
+
+=== Configure mapping
+
+An external configuration file is used to configure the resource service to map a URL to.
+
+[source, groovy]
+.nsl-mapper-config-mn.groovy
+----
+import au.org.biodiversity.mapper.Identifier
+
+mapper {
+    resolverURL = 'http://localhost:7070/nsl-mapper'
+    defaultProtocol = 'http'
+    Map serviceHosts = [
+            bpni: 'http://bpni.com',
+            apni: 'http://apni.com/nsl',
+            ausmoss: 'http://ausmoss.com/nsl',
+            algae: 'http://algae.net/thing',
+            fungi: 'http://fungi.foo',
+            foa : 'http://test.biodiversity.org.au/'
+    ]
+
+    Closure htmlResolver = { Identifier ident ->
+        String host = serviceHosts[ident.nameSpace]
+        if (ident.objectType == 'treeElement') {
+            return "${host}/services/rest/${ident.objectType}/${ident.versionNumber}/${ident.idNumber}"
+        }
+        return "${host}/services/rest/${ident.objectType}/${ident.nameSpace}/${ident.idNumber}"
+    }
+
+    Closure jsonResolver = { Identifier ident ->
+        String host = serviceHosts[ident.nameSpace]
+        if (ident.objectType == 'treeElement') {
+            return "${host}/services/json/${ident.objectType}/${ident.versionNumber}/${ident.idNumber}"
+        }
+        return "${host}/services/json/${ident.objectType}/${ident.nameSpace}/${ident.idNumber}"
+    }
+
+    format {
+        html = htmlResolver
+        json = jsonResolver
+        xml = htmlResolver
+        rdf = {Identifier ident -> return null}
+    }
+}
+----
+
+== How it works
+
+.Data structure
+image::mapper.png[]

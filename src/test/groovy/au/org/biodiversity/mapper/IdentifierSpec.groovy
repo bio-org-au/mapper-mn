@@ -18,7 +18,7 @@ class IdentifierSpec extends Specification {
         when: "I pass a null map"
         MappingService mappingService = Mock(MappingService)
 
-        new Identifier(null, null)
+        new Identifier(null, (Map)null)
 
         then: "throws and NPE"
         thrown(NullPointerException)

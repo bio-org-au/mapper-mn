@@ -8,19 +8,28 @@ import java.util.regex.Matcher
  *
  */
 class MatchingInfo {
+
+    String host
     String path
     String api
     String extension
 
-    MatchingInfo(URI uri) {
-        List<String> parts = findBits(URLDecoder.decode(uri.toString(), 'UTF-8'))
-        path = parts[1]
-        api = parts[2] ?: ''
-        extension = parts[3] ?: ''
+    MatchingInfo(URI uri, String matchRegex) {
+        this(uri.toString(), matchRegex)
     }
 
-    private static List<String> findBits(String s) {
-        Matcher matcher = (s =~ '^/?(.*?)(/api/.*?)?(\\.json|\\.xml|\\.rdf|\\.html)?$')
+    MatchingInfo(String uri, String matchRegex) {
+        println "Regex is: $matchRegex"
+        String urlString = URLDecoder.decode(uri, 'UTF-8')
+        List<String> parts = findBits(urlString, matchRegex)
+        host = parts[1]
+        path = parts[2]
+        api = parts[3] ?: ''
+        extension = parts[4] ?: ''
+    }
+
+    private static List<String> findBits(String s, String matchRegex) {
+        Matcher matcher = (s =~ matchRegex)
         matcher[0] as ArrayList<String>
     }
 }

@@ -1,6 +1,5 @@
 package au.org.biodiversity.mapper
 
-import javax.inject.Inject
 import java.sql.Timestamp
 
 /**

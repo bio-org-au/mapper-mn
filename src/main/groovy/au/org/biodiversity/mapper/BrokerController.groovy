@@ -1,5 +1,6 @@
 package au.org.biodiversity.mapper
 
+import io.micronaut.context.annotation.Property
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
@@ -10,6 +11,7 @@ import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Produces
 
 import javax.annotation.Nullable
+import javax.annotation.security.PermitAll
 import javax.inject.Inject
 
 /**
@@ -17,20 +19,24 @@ import javax.inject.Inject
  * Date: 2/9/19
  *
  */
-@Controller('/')
+@Controller('/broker')
 class BrokerController {
 
     @Inject
     MappingService mappingService
     @Inject
     ContentNegService contentNegService
+    @Property(name = 'mapper.broker-regex')
+    String matchRegex
 
+    @PermitAll
     @Produces(MediaType.TEXT_PLAIN)
     @Get("/{/path:.*}")
     HttpResponse index(@PathVariable @Nullable String path, HttpRequest<?> request) {
 
-        println "Looking for ${request.uri}"
-        MatchingInfo mInfo = new MatchingInfo(request.uri)
+        println "Request to ${request.uri}"
+        MatchingInfo mInfo = new MatchingInfo(request.uri, matchRegex)
+        println "Looking for ${mInfo.path}"
 
         Tuple2 matchIdentity = mappingService.getMatchIdentity(mInfo.path)
         if (matchIdentity) {
@@ -47,8 +53,7 @@ class BrokerController {
         println "Path you want: $mInfo.path Not Found!"
         return notFound("$mInfo.path not found")
     }
-
-
+    
     private HttpResponse seeOther(Identifier identifier, MatchingInfo mInfo, HttpRequest<?> request) {
 
         MediaType contentType = contentNegService.chooseContentType(request.headers.accept(), mInfo.extension)
@@ -67,8 +72,8 @@ class BrokerController {
     private HttpResponse movedPermanently(Identifier identifier, MatchingInfo mInfo, HttpRequest<?> request) {
         Match preferredUrl = identifier.getPreferredUri()
         String host = mappingService.getPreferredHost()
-        println "Identifier: $identifier\n moved permanently to: $host/$preferredUrl.uri"
         if (preferredUrl) {
+            println "Identifier: $identifier\n moved permanently to: $host/$preferredUrl.uri"
             return HttpResponse
                     .status(HttpStatus.MOVED_PERMANENTLY)
                     .header("Cache-Control", "no-cache, must-revalidate")
