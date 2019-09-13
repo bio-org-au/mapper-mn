@@ -48,27 +48,27 @@ class BrokerControllerSpec extends Specification {
         resp.getStatus() == HttpStatus.MOVED_PERMANENTLY
 
         when: "I ask for something that's not there"
-        resp = httpCall('blah/blah/bang')
+        httpCall('blah/blah/bang')
 
         then: "I get a not found (401)"
         HttpClientResponseException notFound = thrown()
         notFound.message == 'blah/blah/bang not found'
 
         when: "I ask for a deleted object"
-        resp = httpCall('name/apni/148297')
+        httpCall('name/apni/148297')
 
         then: "I get a gone (410)"
         HttpClientResponseException gone = thrown()
         gone.message == 'Name has not been applied to Australian flora'
 
         when: "I get a deprecated match that doesn't have a preferred uri"
-        resp = httpCall('name/blah/666')
+        resp = httpCall('old/deprecated/link')
 
         then: "I get a see other redirection to the resource (303)"
         resp.getStatus() == HttpStatus.SEE_OTHER
 
         when: "I ask for a resource that breaks"
-        resp = httpCall('name/apni/54433.rdf')
+        httpCall('name/apni/54433.rdf')
 
         then: "I get an internal error (500)"
         HttpClientResponseException internalError = thrown()

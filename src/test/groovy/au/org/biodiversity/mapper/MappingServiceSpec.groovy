@@ -92,9 +92,9 @@ class MappingServiceSpec extends Specification {
         host == 'http://localhost:8080'
     }
 
-    void "test find identifier"(){
+    void "test find identifier"() {
         when: "I try to find an identifier"
-        Identifier i1 = mappingService.findIdentifier('apni','name',54433, null)
+        Identifier i1 = mappingService.findIdentifier('apni', 'name', 54433, null)
 
         then: "I get it"
         i1
@@ -102,11 +102,11 @@ class MappingServiceSpec extends Specification {
         i1.objectType == 'name'
         i1.idNumber == 54433
         i1.versionNumber == null
-        i1.preferredUriID == 4
+        i1.preferredUriID == 3
         i1.updatedBy == 'pmcneil'
 
         when: "I try to find an identifier"
-        Identifier i2 = mappingService.findIdentifier('apni','treeElement',2222, 23)
+        Identifier i2 = mappingService.findIdentifier('apni', 'treeElement', 2222, 23)
 
         then: "I get it"
         i2
@@ -118,13 +118,13 @@ class MappingServiceSpec extends Specification {
         i2.updatedBy == 'pmcneil'
 
         when: "I look for one that doesn't exist"
-        Identifier i3 = mappingService.findIdentifier('apni','name',54433, 23)
+        Identifier i3 = mappingService.findIdentifier('apni', 'name', 54433, 23)
 
         then: "I get null"
         i3 == null
     }
 
-    void "test addIdentifier"() {
+    void "test add an existing Identifier"() {
         when: "I try to add an identifier that exits I get it back"
         Identifier i1 = mappingService.addIdentifier('apni', 'name', 54433, null, null, 'pmcneil')
 
@@ -138,26 +138,53 @@ class MappingServiceSpec extends Specification {
         then:
         MatchExistsException ex = thrown()
         ex.message == 'URI name/apni/54433 already exists'
+    }
 
+    @Unroll
+    void "test add a Identifier #preferredUri"() {
         when: "I add new identifier without uri"
-        Identifier i2 = mappingService.addIdentifier('apni', 'meh', 1, null, null, 'pmcneil')
+        Identifier identifier = mappingService.addIdentifier(nameSpace, objectType, idNumber, versionNumber, uri, 'pmcneil')
 
-        then: "It works and I get the default uri"
-        i2
-        i2.idNumber == 1
-        i2.nameSpace == 'apni'
-        i2.objectType =='meh'
-        i2.preferredUri.uri == 'meh/apni/1'
+        then: "It works and I get the preferred URI #preferredUri"
+        identifier
+        identifier.idNumber == idNumber
+        identifier.nameSpace == nameSpace
+        identifier.objectType == objectType
+        identifier.versionNumber == versionNumber
+        identifier.preferredUri.uri == preferredUri
 
-        when: "I add new identifier with uri"
-        Identifier i3 = mappingService.addIdentifier('apni', 'meh', 2, null, 'doodle/flip/twoddle', 'pmcneil')
 
-        then: "It works and gives me back the uri I asked for"
-        i3
-        i3.idNumber == 2
-        i3.nameSpace == 'apni'
-        i3.objectType =='meh'
-        i3.preferredUri.uri == 'doodle/flip/twoddle'
+        where:
+        nameSpace | objectType    | idNumber | versionNumber | uri                   | preferredUri
+        'apni'    | 'meh'         | 1        | null          | null                  | 'meh/apni/1'
+        'apni'    | 'meh'         | 2        | null          | 'doodle/flip/twoddle' | 'doodle/flip/twoddle'
+        'apni'    | 'treeElement' | 1111     | 23            | null                  | 'treeElement/23/1111'
 
+    }
+
+    void "test get links"() {
+        when: "I get the link"
+        List<Map> links = mappingService.getlinks('apni','name',54433)
+        println links
+        then: "I get 2 links"
+        links
+        links.size() == 2
+        links[0].link == 'http://localhost:8080/name/apni/54433'
+        links[0].preferred //preferred link first
+        links[1].link == 'http://localhost:8080/cgi-bin/apni?taxon_id=230687'
+
+        when: "I get an identifier with no links"
+        List<Map> links2 = mappingService.getlinks('blah','name',666)
+
+        then: "Empty list"
+        links2 != null
+        links2.size() == 0
+
+        when: "I ask for a non existent identifier"
+        List<Map> links3 = mappingService.getlinks('blah','name',999)
+
+        then: "Empty list"
+        links3 != null
+        links3.size() == 0
     }
 }
