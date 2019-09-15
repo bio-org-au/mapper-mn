@@ -57,7 +57,7 @@ interface MappingService {
      * @param nameSpace (required)
      * @param objectType (required)
      * @param idNumber (required)
-     * @return URL/link as string e.g. 'https://id.biodiversity.org.au/name/apni/12345'
+     * @return URL/link as string e.g. 'https://id.biodiversity.org.au/name/apni/12345' or null if not found
      */
     String getPreferredLink(String nameSpace, String objectType, Long idNumber)
 

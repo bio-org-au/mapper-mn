@@ -116,7 +116,7 @@ class MappingServiceImpl implements MappingService {
      * @param nameSpace
      * @param objectType
      * @param idNumber
-     * @return String link
+     * @return String link or null
      */
     String getPreferredLink(String nameSpace, String objectType, Long idNumber) {
         withSql { Sql sql ->

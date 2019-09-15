@@ -187,4 +187,44 @@ class MappingServiceSpec extends Specification {
         links3 != null
         links3.size() == 0
     }
+
+    void "test getPreferredLink"() {
+        when: "I ask for a preferred identifier"
+        String link1 = mappingService.getPreferredLink('apni','name',54433)
+
+        then: "I get it"
+        link1
+        link1 == 'http://localhost:8080/name/apni/54433'
+
+        when: "I ask for a identifier that doesn't exist"
+        String link2 = mappingService.getPreferredLink('apni','name',99999)
+
+        then:
+        link2 == null
+    }
+
+    void "test get match Identities"() {
+        when: "I get the identities for a uri"
+        List<Identifier> identifiers1 = mappingService.getMatchIdentities('name/apni/54433')
+
+        then: "I get one of them"
+        identifiers1
+        identifiers1.size() == 1
+        identifiers1[0].objectType == 'name'
+        identifiers1[0].nameSpace == 'apni'
+        identifiers1[0].idNumber == 54433
+        identifiers1[0].versionNumber == 0
+
+        when: "I ask for one that doesn't exist"
+        List<Identifier> identifiers2 = mappingService.getMatchIdentities('name/apni/99999')
+
+        then: "I get null"
+        identifiers2 == null
+
+        when: "I ask for a match that has no identities, but exists"
+        List<Identifier> identifiers3 = mappingService.getMatchIdentities('no-identifier/match')
+
+        then: "I get an empty list"
+        identifiers3.empty
+    }
 }
