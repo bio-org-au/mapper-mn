@@ -3,6 +3,7 @@ package au.org.biodiversity.mapper
 import io.micronaut.context.annotation.Parameter
 import io.micronaut.context.annotation.Property
 import io.micronaut.http.MediaType
+import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
@@ -72,22 +73,62 @@ class ApiController {
 
 //**** Secured endpoints TODO secure
 
+
     @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Put("/add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
-    Map addIdentifier(@QueryValue Optional<String> nameSpace,
-                      @QueryValue Optional<String> objectType,
-                      @QueryValue Optional<Long> idNumber,
-                      @QueryValue Optional<Long> versionNumber,
-                      @QueryValue Optional<String> uri) {
+    Map addIdentifierV1(@QueryValue Optional<String> nameSpace,
+                        @QueryValue Optional<String> objectType,
+                        @QueryValue Optional<Long> idNumber,
+                        @QueryValue Optional<Long> versionNumber,
+                        @QueryValue Optional<String> uri) {
         println "Add identifier $nameSpace, $objectType, $idNumber, $versionNumber -> $uri"
-        mappingService.addIdentifier(nameSpace.get(),
+        Identifier identifier = mappingService.addIdentifier(nameSpace.get(),
                 objectType.get(),
                 idNumber.get(),
                 versionNumber.orElse(null),
                 uri.orElse(null),
-                'fred')
-        return [success: true]
+                'fred') //todo add user
+        return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
+
+    @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Put("/add/{objectType}/{nameSpace}/{idNumber}")
+    Map addNonVersionedIdentifier(@PathVariable String nameSpace,
+                                  @PathVariable String objectType,
+                                  @PathVariable Long idNumber,
+                                  @Body Map body) {
+        String uri = body.uri
+        println "Add $objectType/$nameSpace/$idNumber (uri: $uri)"
+        Identifier identifier = mappingService.addIdentifier(nameSpace,
+                objectType,
+                idNumber,
+                null,
+                uri,
+                'fred') //todo add user
+        return [identifier: identifier, uri: identifier.preferredUri.uri]
+    }
+
+    @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Put("/add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}")
+    Map addVersionedIdentifier(@PathVariable String nameSpace,
+                               @PathVariable String objectType,
+                               @PathVariable Long idNumber,
+                               @PathVariable Long versionNumber,
+                               @Body Map body
+    ) {
+        String uri = body.uri
+        println "Add $objectType/$idNumber/$versionNumber -> namespace: $nameSpace, uri:$uri"
+        Identifier identifier = mappingService.addIdentifier(nameSpace,
+                objectType,
+                idNumber,
+                versionNumber,
+                uri,
+                'fred')
+        return [identifier: identifier, uri: identifier.preferredUri.uri]
+    }
+
 
 }
