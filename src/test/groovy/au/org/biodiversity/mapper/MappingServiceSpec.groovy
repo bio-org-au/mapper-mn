@@ -286,12 +286,11 @@ class MappingServiceSpec extends Specification {
         int i = 0
         while( i < lines.size()) {
             int mod = 0
-            String cat = '['
-            while (mod < 100 && i + mod < lines.size()) {
-                cat += lines[i + mod++]
+            List<String> cat = []
+            while (mod < 500 && i + mod < lines.size()) {
+                cat.add(lines[i + mod++])
             }
-            cat += ']'
-            Set<Map> set = shell.evaluate(cat)
+            Set<Map> set = shell.evaluate('[' + cat.join(',') + ']')
             bulkTreeIds.addAll(set)
             i += mod
         }
