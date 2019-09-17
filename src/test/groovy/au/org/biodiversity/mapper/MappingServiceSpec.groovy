@@ -141,7 +141,7 @@ class MappingServiceSpec extends Specification {
     }
 
     @Unroll
-    void "test add a Identifier #preferredUri"() {
+    void "test add and remove an Identifier #preferredUri"() {
         when: "I add new identifier without uri"
         Identifier identifier = mappingService.addIdentifier(nameSpace, objectType, idNumber, versionNumber, uri, 'pmcneil')
 
@@ -153,18 +153,24 @@ class MappingServiceSpec extends Specification {
         identifier.versionNumber == versionNumber
         identifier.preferredUri.uri == preferredUri
 
+        when: "I remove the identifier"
+        Boolean success = mappingService.removeIdentifier(identifier)
+        Identifier i2 = mappingService.findIdentifier(nameSpace, objectType, idNumber, versionNumber)
+
+        then: "success"
+        success
+        i2 == null
 
         where:
         nameSpace | objectType    | idNumber | versionNumber | uri                   | preferredUri
         'apni'    | 'meh'         | 1        | null          | null                  | 'meh/apni/1'
         'apni'    | 'meh'         | 2        | null          | 'doodle/flip/twoddle' | 'doodle/flip/twoddle'
         'apni'    | 'treeElement' | 1111     | 23            | null                  | 'treeElement/23/1111'
-
     }
 
     void "test get links"() {
         when: "I get the link"
-        List<Map> links = mappingService.getlinks('apni','name',54433)
+        List<Map> links = mappingService.getlinks('apni', 'name', 54433)
         println links
         then: "I get 2 links"
         links
@@ -174,14 +180,14 @@ class MappingServiceSpec extends Specification {
         links[1].link == 'http://localhost:8080/cgi-bin/apni?taxon_id=230687'
 
         when: "I get an identifier with no links"
-        List<Map> links2 = mappingService.getlinks('blah','name',666)
+        List<Map> links2 = mappingService.getlinks('blah', 'name', 666)
 
         then: "Empty list"
         links2 != null
         links2.size() == 0
 
         when: "I ask for a non existent identifier"
-        List<Map> links3 = mappingService.getlinks('blah','name',999)
+        List<Map> links3 = mappingService.getlinks('blah', 'name', 999)
 
         then: "Empty list"
         links3 != null
@@ -190,14 +196,14 @@ class MappingServiceSpec extends Specification {
 
     void "test getPreferredLink"() {
         when: "I ask for a preferred identifier"
-        String link1 = mappingService.getPreferredLink('apni','name',54433)
+        String link1 = mappingService.getPreferredLink('apni', 'name', 54433)
 
         then: "I get it"
         link1
         link1 == 'http://localhost:8080/name/apni/54433'
 
         when: "I ask for a identifier that doesn't exist"
-        String link2 = mappingService.getPreferredLink('apni','name',99999)
+        String link2 = mappingService.getPreferredLink('apni', 'name', 99999)
 
         then:
         link2 == null
@@ -226,5 +232,78 @@ class MappingServiceSpec extends Specification {
 
         then: "I get an empty list"
         identifiers3.empty
+    }
+
+    void "test add/set preferred host"() {
+        when: "I add a host that doesn't exist"
+        Host h1 = mappingService.addHost('nerderg.com')
+        println h1
+
+        then: "I get a host back that isn't set as preferred"
+        h1
+        h1.hostName == 'nerderg.com'
+        !h1.preferred
+
+        when: "I try and add the same host name again"
+        Host h2 = mappingService.addHost('nerderg.com')
+        println h2
+
+        then: "I get the same host back"
+        h2
+        h2.id == h1.id
+        h1.hostName == h1.hostName
+
+        when: "I set a host as preferred"
+        Host h3 = mappingService.setPreferredHost('nerderg.com')
+        println h3
+
+        then: "I get a host back with preferred set"
+        h3
+        h3.preferred
+        h3.id == h1.id
+
+        when: "I try and set a non existent host as preferred"
+        Host h4 = mappingService.setPreferredHost('derg.com')
+
+        then: "I get a Not Found Exception"
+        NotFoundException nfe = thrown()
+        nfe.message == "Host derg.com not found"
+
+        cleanup:
+        mappingService.setPreferredHost('localhost:8080')
+
+    }
+
+    void "test add bulk identifiers"() {
+        when: "I add 36k identifiers"
+        File cwd = new File('.')
+        println cwd.absolutePath
+        GroovyShell shell = new GroovyShell()
+        File ids = new File('./src/test/groovy/au/org/biodiversity/mapper/BulkIdentifiers.txt')
+        //split the read to avoid method too large
+        List<String> lines = ids.readLines()
+        Set<Map> bulkTreeIds = []
+        int i = 0
+        while( i < lines.size()) {
+            int mod = 0
+            String cat = '['
+            while (mod < 100 && i + mod < lines.size()) {
+                cat += lines[i + mod++]
+            }
+            cat += ']'
+            Set<Map> set = shell.evaluate(cat)
+            bulkTreeIds.addAll(set)
+            i += mod
+        }
+
+        Boolean success = mappingService.bulkAddIdentifiers(bulkTreeIds, 'tester')
+
+        then: "It worked"
+        success
+        for (Map ident in bulkTreeIds) {
+            Identifier identifier = mappingService.findIdentifier((String)ident.s,(String)ident.o, (Long)ident.i, (Long)ident.v)
+            identifier != null
+            identifier.preferredUri.uri == ident.u
+        }
     }
 }

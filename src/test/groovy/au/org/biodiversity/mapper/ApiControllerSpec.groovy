@@ -168,6 +168,42 @@ class ApiControllerSpec extends Specification {
         'apni'        | 'treeElement' | 222      | 222           | 'tree/222/222'   | 'tree/222/222'
     }
 
+    void "test add/set preferred host"() {
+        when:
+        Map r1 = httpPutCallMap('/add-host', [hostName: 'mcneils.net'])
+
+        then:
+        r1
+        r1.host
+        r1.host.hostName == 'mcneils.net'
+        r1.host.preferred == false
+
+        when: "I add it again I get back the same host"
+        Map r2 = httpPutCallMap('/add-host', [hostName: 'mcneils.net'])
+
+        then:
+        r2
+        r2.host.id == r1.host.id
+        r2.host.hostName == r1.host.hostName
+
+        when: "I set it as preferred"
+        Map r3 = httpPutCallMap('/set-preferred-host', [hostName: 'mcneils.net'])
+
+        then: "it is set"
+        r3
+        r3.host.preferred
+        r3.host.id == r2.host.id
+
+        when: "I set a non existent host as preferred"
+        Map r4 = httpPutCallMap('/set-preferred-host', [hostName: 'neils.net'])
+
+        then: "not found exception"
+        HttpClientResponseException notFound = thrown()
+        notFound.message == "Page Not Found"
+
+        cleanup:
+        httpPutCallMap('/set-preferred-host', [hostName: 'localhost:8080'])
+    }
 
     private Map httpPutCallMap(String uri, Map body) {
         Flowable<Map> call = client.retrieve(

@@ -88,4 +88,39 @@ interface MappingService {
      */
     Identifier addIdentifier(String nameSpace, String objectType, Long idNumber, Long versionNumber, String uri, String userName)
 
+    /**
+     * Remove the given identifier
+     * @param identifier
+     * @return success
+     */
+    Boolean removeIdentifier(Identifier identifier)
+
+    /**
+     * Remove any matches that have had their identifiers removed
+     */
+    void cleanupOrphanMatch()
+
+    /**
+     * Add a list of Identifiers with uri's.
+     *
+     * @param identifiers , a list of maps in the format [s: nameSpace, o: objectType, i: idNumber, v: versionNumber, u: uri]
+     * @param username
+     * @return success
+     */
+    Boolean bulkAddIdentifiers(Collection<Map> identifiers, String username)
+
+    /**
+     * Permanently remove a set of identifiers.
+     * @param identifiers: a list of maps in the format [s: nameSpace, o: objectType, i: idNumber, v: versionNumber]
+     */
+    void bulkRemoveIdentifiers(List<Map> identifiers)
+
+    /**
+     * Add a new host
+     * @param hostName
+     * @return a Host object
+     */
+    Host addHost(String hostName)
+
+    Host setPreferredHost(String hostName)
 }

@@ -73,7 +73,6 @@ class ApiController {
 
 //**** Secured endpoints TODO secure
 
-
     @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Put("/add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
@@ -128,6 +127,28 @@ class ApiController {
                 uri,
                 'fred')
         return [identifier: identifier, uri: identifier.preferredUri.uri]
+    }
+
+    @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Put("/add-host")
+    Map addHost(@Body Map body) {
+        String hostName = body.hostName
+        Host host = mappingService.addHost(hostName)
+        return [host: host]
+    }
+
+    @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Put("/set-preferred-host")
+    Map setPreferredHost(@Body Map body) {
+        try {
+            String hostName = body.hostName
+            Host host = mappingService.setPreferredHost(hostName)
+            return [host: host]
+        } catch (NotFoundException nfe) {
+            return null
+        }
     }
 
 

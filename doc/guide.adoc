@@ -37,6 +37,7 @@ You can map a URI to different servers based on the content type requested, e.g.
 * endpoints are moving from camel case to skewer case ie. `/broker/preferredHost` -> `/api/preferred-host`
 * only serving up JSON, we will not respond with xml on our mapper API as it's not used
 * get version of add-identifier has been deprecated, there are two new put versions of add-identifier
+* removed bulkRemoveByUri as it wasn't used
 
 == Configuration
 
