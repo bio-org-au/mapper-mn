@@ -323,46 +323,42 @@ class MappingServiceImpl implements MappingService {
         withSql { Sql sql ->
             Boolean success = false
             sql.withTransaction {
-                log.info "inserting matches"
-                sql.execute(insertBulkMatch(identifiers, username))
+                sql.execute('''
+                    create temp table bulkInsert
+                        (
+                            m_id             bigint default nextval('mapper.mapper_sequence'::regclass) not null,
+                            m_uri            varchar(255)                                               not null,
+                            i_id             bigint default nextval('mapper.mapper_sequence'::regclass) not null,
+                            i_id_number      bigint                                                     not null,
+                            i_name_space     varchar(255)                                               not null,
+                            i_object_type    varchar(255)                                               not null,
+                            i_version_number bigint
+                        ) on commit drop''')
+                log.info "inserting into temp bulk"
+                sql.execute(insertBulkTempTable(identifiers, username))
 
-                log.info "inserting identifiers"
-                sql.execute(insertBulkIdentifier(identifiers, username))
-
-                log.info "linking identifiers to matches"
-                sql.execute('''insert into mapper.identifier_identities (match_id, identifier_id) (select preferred_uri_id, i.id from mapper.identifier i
-                    where i.preferred_uri_id is not null and not exists (select 1 from mapper.identifier_identities ii where ii.identifier_id = i.id))''')
-
-                log.info "Inserting match hosts"
-                sql.executeInsert('''INSERT INTO mapper.match_host (match_hosts_id, host_id)
-                    SELECT m.id, ph.id
-                    FROM mapper.match m,
-                    (SELECT h.id FROM mapper.host h WHERE h.preferred) ph     
-                    WHERE NOT exists(SELECT 1 FROM mapper.match_host mh WHERE mh.match_hosts_id = m.id)''')
+                log.info "Creating identifier, matches, and linking."
+                sql.execute('''
+                    insert into mapper.match (id, uri, deprecated, updated_at, updated_by) select m_id, m_uri, false, now(), 'test' from bulkInsert;
+                    insert into mapper.identifier (id, id_number, name_space, object_type, version_number, preferred_uri_id, deleted, reason_deleted, updated_at, updated_by)
+                    select i_id, i_id_number, i_name_space, i_object_type, i_version_number, m_id, false, null, now(), 'test' from bulkInsert;
+                    insert into mapper.identifier_identities (match_id, identifier_id) (select m_id, i_id from bulkInsert);
+                    insert into mapper.match_host (match_hosts_id, host_id) SELECT m_id,ph.id from bulkInsert, (SELECT h.id FROM mapper.host h WHERE h.preferred) ph;''')
                 success = true
             }
             return success
         }
     }
 
-    private static String insertBulkMatch(Collection<Map> identifiers, String username) {
+    private static String insertBulkTempTable(Collection<Map> identifiers, String username) {
         List<String> insert =  []
         for (Map ident in identifiers) {
-            insert.add("('${ident.u}', now(), '$username')".toString())
+            insert.add("('${ident.u}', '${ident.s}', '${ident.o}', ${ident.i}, ${ident.v})".toString())
         }
-        log.info "finished making insert match"
-        return 'INSERT INTO mapper.match (uri, updated_at, updated_by) VALUES ' + insert.join(',')
+        String stmt = 'INSERT INTO bulkInsert (m_uri, i_name_space, i_object_type, i_id_number, i_version_number) VALUES ' + insert.join(',')
+        log.info "finished making temp bulk insert"
+        return stmt
     }
-
-    private static String insertBulkIdentifier(Collection<Map> identifiers, String username) {
-        List<String> insert =  []
-        for (Map ident in identifiers) {
-            insert.add("('${ident.s}', '${ident.o}', ${ident.i}, ${ident.v}, (SELECT id FROM mapper.match WHERE uri = '${ident.u}'), '${username}', now())".toString())
-        }
-        log.info "finished making insert Identifier"
-        return 'INSERT INTO mapper.identifier (name_space, object_type, id_number, version_number, preferred_uri_id, updated_by, updated_at) VALUES ' + insert.join(',')
-    }
-
 
     /**
      * permanently remove a set of identifiers, for example when you delete a draft tree.
