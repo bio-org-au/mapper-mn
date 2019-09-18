@@ -2,14 +2,18 @@ package au.org.biodiversity.mapper
 
 import io.micronaut.context.annotation.Parameter
 import io.micronaut.context.annotation.Property
+import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
+import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Produces
 import io.micronaut.http.annotation.Put
 import io.micronaut.http.annotation.QueryValue
+import io.micronaut.http.hateoas.JsonError
 import io.reactivex.Maybe
 
 import javax.annotation.Nullable
@@ -151,5 +155,89 @@ class ApiController {
         }
     }
 
+    @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Post("/bulk-add-identifiers")
+    HttpResponse bulkAddIdentifiers(@Body Map body) {
+        Set<Map> identifiers = body.identifiers as Set<Map>
+        if (mappingService.bulkAddIdentifiers(identifiers, 'fred')) {
+            return HttpResponse.<Map> ok(success: true, message: "${identifiers.size()} identities added.".toString())
+        }
+        return HttpResponse.serverError()
+    }
+
+    @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Post("/bulk-remove-identifiers")
+    HttpResponse bulkRemoveIdentifiers(@Body Map body) {
+        Set<Map> identifiers = body.identifiers as Set<Map>
+        if (mappingService.bulkRemoveIdentifiers(identifiers)) {
+            return HttpResponse.<Map> ok(success: true, message: "${identifiers.size()} identities removed.".toString())
+        }
+        return HttpResponse.serverError()
+    }
+
+    @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Put("/add-uri-to-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}{?preferred}")
+    HttpResponse addURI(@QueryValue Optional<String> nameSpace,
+                        @QueryValue Optional<String> objectType,
+                        @QueryValue Optional<Long> idNumber,
+                        @QueryValue Optional<Long> versionNumber,
+                        @QueryValue Optional<String> uri,
+                        @QueryValue Optional<Boolean> preferred ) {
+        Identifier identifier = mappingService.findIdentifier(nameSpace.get(), objectType.get(), idNumber.get(), versionNumber.orElse(null))
+        if (identifier) {
+            Match match = mappingService.addMatch(uri.get(), 'fred')
+            if (mappingService.addUriToIdentifier(identifier, match, preferred.orElse(false))) {
+                return HttpResponse.<Map> ok([success: true, message: 'uri added to identity', match: match, identifier: identifier])
+            }
+            return HttpResponse.serverError(new JsonError("Could not add URI ${uri.get()} to Identifier"))
+        }
+        return HttpResponse.<JsonError> notFound(new JsonError('Identifier not found'))
+    }
+
+    @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Post("/move-identity")
+    HttpResponse moveIdentity(@Body Map body) {
+        Identifier from = mappingService.findIdentifier((String) body.fromNameSpace, (String) body.fromObjectType, (Long) body.fromIdNumber, (Long) body.fromVersionNumber)
+        if (from) {
+            Identifier to = mappingService.findIdentifier((String) body.toNameSpace, (String) body.toObjectType, (Long) body.toIdNumber, (Long) body.toVersionNumber)
+            if (to) {
+                if (mappingService.moveUris(from, to)) {
+                    return HttpResponse.<Map> ok(success: true, message: "Identities moved.", from: from, to: to)
+                }
+                return HttpResponse.serverError(new JsonError("Couldn't move Identity"))
+            }
+            return HttpResponse.<JsonError> notFound(new JsonError("To identifier doesn't exist."))
+        }
+        return HttpResponse.<JsonError> notFound(new JsonError("From identifier doesn't exist."))
+    }
+
+    @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Delete("/remove-identifier-from-uri{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
+    HttpResponse removeIdentityFromUri(@QueryValue Optional<String> nameSpace,
+                                       @QueryValue Optional<String> objectType,
+                                       @QueryValue Optional<Long> idNumber,
+                                       @QueryValue Optional<Long> versionNumber,
+                                       @QueryValue Optional<String> uri) {
+        Identifier identifier = mappingService.findIdentifier(nameSpace.get(), objectType.get(), idNumber.get(), versionNumber.orElse(null))
+        if (identifier) {
+            Match match = mappingService.findMatch(uri.get())
+            if (match) {
+                if (mappingService.removeIdentityFromUri(match, identifier)) {
+                    return HttpResponse.<Map> ok(success: true, message: 'Identifier removed from URI.', identitifier: identifier)
+                }
+                return HttpResponse.serverError(new JsonError("Couldn't remove Identifier"))
+            }
+            return HttpResponse.<JsonError> notFound(new JsonError("URI ${uri.get()} doesn't exist."))
+        }
+        return HttpResponse.<JsonError> notFound(new JsonError("Identifier doesn't exist."))
+    }
+
+    HttpResponse deleteIdentifier() {
+    }
 
 }

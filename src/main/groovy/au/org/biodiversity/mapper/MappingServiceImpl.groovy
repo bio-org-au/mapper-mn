@@ -34,10 +34,10 @@ class MappingServiceImpl implements MappingService {
     /**
      * Returns a tuple of the match and the identifier.
      * NOTE: ignore the ID of the Identifier and Match objects here
-     * @param path
+     * @param uri
      * @return
      */
-    Tuple2<Identifier, Match> getMatchIdentity(String path) {
+    Tuple2<Identifier, Match> getMatchIdentity(String uri) {
         withSql { Sql sql ->
             GroovyRowResult row = sql.firstRow('''
             select m.id               as m_id,
@@ -58,7 +58,7 @@ class MappingServiceImpl implements MappingService {
             from mapper.match m
                      join mapper.identifier_identities ii on m.id = ii.match_id
                      join mapper.identifier i on ii.identifier_id = i.id
-            where uri = :path''', [path: path])
+            where uri = :uri''', [uri: uri])
             if (row) {
                 Identifier identifier = new Identifier(this, row)
                 Match match = new Match(row)
@@ -242,14 +242,15 @@ class MappingServiceImpl implements MappingService {
         }
 
         if (uri) {
-            Match match = findMatch(uri)
-            if (match) {
+            Match existingMatch = findMatch(uri)
+            if (existingMatch) {
                 // don't need to check identity matches since previous search should have found it
                 throw new MatchExistsException("URI $uri already exists")
             }
         } else {
             uri = defaultUri(nameSpace, objectType, idNumber, versionNumber)
         }
+
         // do the inserts
         withSql { Sql sql ->
             sql.withTransaction {
@@ -271,6 +272,18 @@ class MappingServiceImpl implements MappingService {
             }
         }
         return findIdentifier(nameSpace, objectType, idNumber, versionNumber)
+    }
+
+    List<Match> getMatches(Long identifierId) {
+        List<Match> matches = []
+        withSql { Sql sql ->
+            sql.eachRow('''select m.* from mapper.identifier_identities ii 
+                join mapper.match m on ii.match_id = m.id
+                where ii.identifier_id = :identifierId''', [identifierId: identifierId]) { row ->
+                matches.add(new Match(row, ''))
+            }
+        }
+        return matches
     }
 
     /**
@@ -300,6 +313,7 @@ class MappingServiceImpl implements MappingService {
 
     @Async
     void cleanupOrphanMatch() {
+        log.info "cleaning up orphans"
         withSql { Sql sql ->
             sql.withTransaction {
                 sql.execute('''
@@ -309,6 +323,7 @@ class MappingServiceImpl implements MappingService {
                     delete from mapper.match_host where match_hosts_id in (select id from orphanMatch);
                     delete from mapper.match where id in (select id from orphanMatch);''')
             }
+            log.info "clean up transaction complete"
         }
     }
 
@@ -351,7 +366,7 @@ class MappingServiceImpl implements MappingService {
     }
 
     private static String insertBulkTempTable(Collection<Map> identifiers, String username) {
-        List<String> insert =  []
+        List<String> insert = []
         for (Map ident in identifiers) {
             insert.add("('${ident.u}', '${ident.s}', '${ident.o}', ${ident.i}, ${ident.v})".toString())
         }
@@ -365,41 +380,54 @@ class MappingServiceImpl implements MappingService {
      * @param identifiers : a list of maps in the format [s: nameSpace, o: objectType, i: idNumber, v: versionNumber]
      */
     @Synchronized
-    void bulkRemoveIdentifiers(List<Map> identifiers) {
-        log.debug "Removing ${identifiers.size()} identifiers"
+    Boolean bulkRemoveIdentifiers(Collection<Map> identifiers) {
+        log.info "Removing ${identifiers.size()} identifiers"
+        Boolean success = false
         withSql { Sql sql ->
             sql.withTransaction {
                 int count = 0
 
                 sql.execute('''
-                    create temp table mapper.bulk_remove
+                    create temp table bulkRemove
                     (
-                        identifier_id INT8 NOT NULL,
-                        match_id      INT8 NOT NULL,
-                        PRIMARY KEY (identifier_id)
+                        identifier_id  INT8,
+                        match_id       INT8,
+                        id_number      bigint       not null,
+                        name_space     varchar(255) not null,
+                        object_type    varchar(255) not null,
+                        version_number bigint
                     ) on commit drop;''')
+                log.info "inserting into temp bulkRemove"
+                sql.execute(insertBulkRemoveTable(identifiers))
 
-                for (Map ident in identifiers) {
-                    sql.execute('''
-                    INSERT INTO mapper.bulk_remove 
-                      SELECT ii.identifier_id, ii.match_id FROM mapper.identifier i JOIN mapper.identifier_identities ii ON i.id = ii.identifier_id
-                            WHERE i.id_number = :i 
-                              AND i.object_type = :o
-                              AND i.version_number = :v
-                              AND i.name_space = :s''', ident)
-                    if (++count % 1000 == 0) {
-                        log.debug "Found $count identifiers to remove."
-                    }
-                }
                 log.debug "Removing identifiers"
                 sql.execute('''
-                DELETE FROM mapper.identifier_identities ii WHERE identifier_id IN (SELECT DISTINCT (identifier_id) FROM mapper.bulk_remove);
-                DELETE FROM mapper.identifier i WHERE i.id IN (SELECT DISTINCT (identifier_id) FROM mapper.bulk_remove);''')
+                    update bulkRemove br set identifier_id = i.id, match_id = ii.match_id
+                    from mapper.identifier i
+                        JOIN mapper.identifier_identities ii ON i.id = ii.identifier_id
+                    WHERE i.id_number = br.id_number
+                      AND i.object_type = br.object_type
+                      AND i.version_number = br.version_number
+                      AND i.name_space = br.name_space;
+                    DELETE FROM mapper.identifier_identities ii WHERE identifier_id IN (SELECT DISTINCT (identifier_id) FROM bulkRemove);
+                    DELETE FROM mapper.identifier i WHERE i.id IN (SELECT DISTINCT (identifier_id) FROM bulkRemove);''')
+                success = true
             }
         }
         cleanupOrphanMatch()
+        log.info "complete"
+        return success
     }
 
+    private static String insertBulkRemoveTable(Collection<Map> identifiers) {
+        List<String> insert = []
+        for (Map ident in identifiers) {
+            insert.add("('${ident.s}', '${ident.o}', ${ident.i}, ${ident.v})".toString())
+        }
+        String stmt = 'INSERT INTO bulkRemove (name_space, object_type, id_number, version_number) VALUES ' + insert.join(',')
+        log.info "finished making temp bulk remove insert"
+        return stmt
+    }
 
     @Override
     Host addHost(String hostName) {
@@ -437,6 +465,117 @@ class MappingServiceImpl implements MappingService {
                     update mapper.host set preferred = true where host_name = :hostName''', [hostName: hostName])
             }
             return findHost(hostName, sql) //get it from the DB
+        }
+    }
+
+    @Override
+    Boolean addUriToIdentifier(Identifier identifier, Match match, Boolean setAsPreferred) {
+        Match existing = getMatches(identifier.id).find { it.id == match.id }
+        if (existing) {
+            if (setAsPreferred && identifier.preferredUriID != match.id) {
+                withSql { Sql sql ->
+                    sql.withTransaction {
+                        sql.executeUpdate('update mapper.identifier set preferred_uri_id = :mId where id = :iId',
+                                [iId: identifier.id, mId: match.id])
+                    }
+                }
+            }
+            return true
+        }
+        Boolean success = false
+        withSql { Sql sql ->
+            sql.withTransaction {
+                sql.executeInsert('insert into mapper.identifier_identities (match_id, identifier_id) values (:matchId, :identifierId)', [matchId: match.id, identifierId: identifier.id])
+                if (setAsPreferred) {
+                    sql.executeUpdate('update mapper.identifier set preferred_uri_id = :mId where id = :iId',
+                            [iId: identifier.id, mId: match.id])
+                }
+                success = true
+            }
+        }
+        return success
+    }
+
+    @Override
+    Match addMatch(String uri, String username) {
+        Match match = findMatch(uri)
+        if (match) {
+            return match
+        }
+        withSql { Sql sql ->
+            sql.withTransaction {
+                List<List<Object>> m = sql.executeInsert('insert into mapper.match (uri, updated_at, updated_by) values (:uri, now(), :username)',
+                        [uri: uri, username: username])
+                match = new Match(m[0])
+                sql.executeInsert('''insert into mapper.match_host (match_hosts_id, host_id) 
+                    VALUES (:matchId, (select id from mapper.host where preferred limit 1))''', [matchId: match.id])
+            }
+        }
+        return match
+    }
+
+    Map stats() {
+        Map stats = [:]
+        withSql { Sql sql ->
+            stats.identifiers = sql.firstRow('select count(1) c from mapper.identifier')?."c"
+            stats.matches = sql.firstRow('select count(1) c from mapper.match')?."c"
+            stats.hosts = sql.firstRow('select count(1) c from mapper.host')?."c"
+            stats.orphanMatch = sql.firstRow('''select count(id) c from mapper.match m
+            where not exists(select 1 from mapper.identifier_identities where match_id = m.id)
+            and not exists(select 1 from mapper.identifier where preferred_uri_id = m.id)''')?."c"
+            stats.orphanIdentifier = sql.firstRow('''select count(id) c from mapper.identifier i
+            where not exists(select 1 from mapper.identifier_identities where identifier_id = i.id)
+            and (preferred_uri_id is null or not exists(select 1 from mapper.match m where i.preferred_uri_id = m.id))''')?."c"
+        }
+        log.info "Stats: $stats"
+        return stats
+    }
+
+    Boolean moveUris(Identifier from, Identifier to) {
+        Boolean success = false
+        withSql { Sql sql ->
+            sql.withTransaction {
+                sql.executeUpdate('''update mapper.identifier_identities ii set identifier_id = :toId where identifier_id = :fromId''',
+                        [toId: to.id, fromId: from.id])
+                success = true
+            }
+        }
+        return success
+    }
+
+    @Override
+    Boolean removeIdentityFromUri(Match match, Identifier identifier) {
+        Boolean success = false
+        withSql { Sql sql ->
+            sql.withTransaction {
+                sql.execute('''delete from mapper.identifier_identities ii where identifier_id = :identifierId and match_id = :matchId''',
+                        [identifierId: identifier.id, matchId: match.id])
+                if (identifier.preferredUriID == match.id) {
+                    sql.executeUpdate('update mapper.identifier set preferred_uri_id = null where id = :identifierId',
+                            [identifierId: identifier.id])
+                }
+                success = true
+            }
+        }
+        return success
+    }
+
+    @Override
+    Host getHost(Match match) {
+        withSql { Sql sql ->
+            GroovyRowResult row = sql.firstRow('''
+                select h.* from mapper.match_host mh 
+                    join mapper.host h on mh.host_id = h.id 
+                where mh.match_hosts_id = :matchId''', [matchId: match.id])
+            return row ? new Host(row, '') : null
+        }
+    }
+
+    @Override
+    Identifier getIdentifier(Long id) {
+        withSql { Sql sql ->
+            GroovyRowResult row = sql.firstRow('select * from mapper.identifier where id = :id', [id: id])
+            return new Identifier(this, row, '')
         }
     }
 

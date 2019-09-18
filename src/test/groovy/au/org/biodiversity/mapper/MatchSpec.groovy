@@ -14,7 +14,7 @@ class MatchSpec extends Specification {
 
     void "test create a Match"() {
         when: "I pass a null map"
-        new Match(null)
+        new Match((Map)null)
 
         then:
         thrown(NullPointerException)

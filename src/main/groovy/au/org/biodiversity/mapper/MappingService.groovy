@@ -12,7 +12,7 @@ interface MappingService {
      * @param path
      * @return
      */
-    Tuple2<Identifier, Match> getMatchIdentity(String path)
+    Tuple2<Identifier, Match> getMatchIdentity(String uri)
 
     /**
      * Get a list of identities associated with a uri path string
@@ -42,7 +42,7 @@ interface MappingService {
      * @param objectType (required)
      * @param idNumber (required)
      * @param versionNumber (optional may be null)
-     * @return an Identifier
+     * @return an Identifier or null if not found
      */
     Identifier findIdentifier(String nameSpace, String objectType, Long idNumber, Long versionNumber)
 
@@ -112,8 +112,9 @@ interface MappingService {
     /**
      * Permanently remove a set of identifiers.
      * @param identifiers: a list of maps in the format [s: nameSpace, o: objectType, i: idNumber, v: versionNumber]
+     * @return success
      */
-    void bulkRemoveIdentifiers(List<Map> identifiers)
+    Boolean bulkRemoveIdentifiers(Collection<Map> identifiers)
 
     /**
      * Add a new host
@@ -122,5 +123,36 @@ interface MappingService {
      */
     Host addHost(String hostName)
 
+    /**
+     * Set the host to be the preferred host
+     * @param hostName
+     * @return
+     */
     Host setPreferredHost(String hostName)
+
+    /**
+     * Add the supplied match to the supplied identifier
+     * @param identifier
+     * @param match
+     * @return success
+     */
+    Boolean addUriToIdentifier(Identifier identifier, Match match, Boolean setAsPreferred)
+
+    /**
+     * Adds a uri or returns the one that matches
+     * @param uri
+     * @param username
+     * @return Match
+     */
+    Match addMatch(String uri, String username)
+
+    Map stats()
+
+    Boolean moveUris(Identifier from, Identifier to)
+
+    Boolean removeIdentityFromUri(Match match, Identifier identifier)
+
+    Host getHost(Match match)
+
+    Identifier getIdentifier(Long id)
 }

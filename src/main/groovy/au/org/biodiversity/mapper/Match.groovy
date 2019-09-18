@@ -1,5 +1,7 @@
 package au.org.biodiversity.mapper
 
+import groovy.sql.GroovyResultSet
+
 import java.sql.Timestamp
 
 /**
@@ -24,6 +26,29 @@ class Match {
         deprecated = values."${prefix}deprecated"
         updatedAt = values."${prefix}updated_at" as Timestamp
         updatedBy = values."${prefix}updated_by"
+    }
+
+    Match(GroovyResultSet values, String prefix = 'm_') {
+        if (!values) {
+            throw new NullPointerException("Row of values can't be null when constructing Match")
+        }
+        id = values.getLong("${prefix}id")
+        uri = values.getString("${prefix}uri")
+        deprecated = values.getBoolean("${prefix}deprecated")
+        updatedAt = values.getTimestamp("${prefix}updated_at")
+        updatedBy = values.getString("${prefix}updated_by")
+    }
+
+    Match(List values) {
+        println values
+        if (!values) {
+            throw new NullPointerException("List of values can't be null when constructing Match")
+        }
+        id = values[0] as Long
+        uri = values[1] as String
+        deprecated = values[2] as Boolean
+        updatedAt = values[3] as Timestamp
+        updatedBy = values[4] as String
     }
 
     String toString() {

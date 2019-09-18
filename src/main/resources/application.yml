@@ -1,6 +1,9 @@
 micronaut:
   application:
     name: mapper-mn
+  server:
+    max-request-size: 4mb
+    multipart.max-file-size: 4mb  #todo remove when bug fixed https://github.com/micronaut-projects/micronaut-core/issues/1882
 #  router:
 #    static-resources:
 #      swagger:

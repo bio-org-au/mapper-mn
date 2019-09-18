@@ -6,6 +6,7 @@ import io.micronaut.runtime.ApplicationConfiguration
 
 import javax.inject.Named
 import javax.inject.Singleton
+import java.time.Duration
 
 @Named("testClient")
 @Singleton
@@ -13,6 +14,7 @@ class TestHttpClientConfiguration extends HttpClientConfiguration {
     TestHttpClientConfiguration(ApplicationConfiguration applicationConfiguration) {
         super(applicationConfiguration)
         setFollowRedirects(false)
+        setReadTimeout(Duration.ofSeconds(40))
     }
 
     @Override

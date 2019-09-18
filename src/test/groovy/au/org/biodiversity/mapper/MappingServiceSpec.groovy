@@ -172,6 +172,7 @@ class MappingServiceSpec extends Specification {
         when: "I get the link"
         List<Map> links = mappingService.getlinks('apni', 'name', 54433)
         println links
+
         then: "I get 2 links"
         links
         links.size() == 2
@@ -276,33 +277,122 @@ class MappingServiceSpec extends Specification {
 
     void "test add bulk identifiers"() {
         when: "I add 36k identifiers"
-        File cwd = new File('.')
-        println cwd.absolutePath
-        GroovyShell shell = new GroovyShell()
-        File ids = new File('./src/test/groovy/au/org/biodiversity/mapper/BulkIdentifiers.txt')
-        //split the read to avoid method too large
-        List<String> lines = ids.readLines()
-        Set<Map> bulkTreeIds = []
-        int i = 0
-        while( i < lines.size()) {
-            int mod = 0
-            List<String> cat = []
-            while (mod < 500 && i + mod < lines.size()) {
-                cat.add(lines[i + mod++])
-            }
-            Set<Map> set = shell.evaluate('[' + cat.join(',') + ']')
-            bulkTreeIds.addAll(set)
-            i += mod
-        }
-
+        Set<Map> bulkTreeIds = TestHelpers.getBulkTreeIds()
         Boolean success = mappingService.bulkAddIdentifiers(bulkTreeIds, 'tester')
 
         then: "It worked"
         success
         for (Map ident in bulkTreeIds) {
-            Identifier identifier = mappingService.findIdentifier((String)ident.s,(String)ident.o, (Long)ident.i, (Long)ident.v)
+            Identifier identifier = mappingService.findIdentifier((String) ident.s, (String) ident.o, (Long) ident.i, (Long) ident.v)
             identifier != null
             identifier.preferredUri.uri == ident.u
         }
+
+        when: "I remove them"
+        Boolean s2 = mappingService.bulkRemoveIdentifiers(bulkTreeIds)
+
+        then: "It should work"
+        s2
+        for (Map ident in bulkTreeIds) {
+            Identifier identifier = mappingService.findIdentifier((String) ident.s, (String) ident.o, (Long) ident.i, (Long) ident.v)
+            identifier == null
+        }
+        mappingService.stats().matches < 20
+    }
+
+    void "test addMatch"() {
+        when: "I add a new uri"
+        Match m1 = mappingService.addMatch('name/uri/123', 'test')
+        Host host = mappingService.getHost(m1)
+
+        then: "I get it"
+        m1
+        m1.uri == 'name/uri/123'
+        host
+
+        when: "I add it again"
+        Match m2 = mappingService.addMatch('name/uri/123', 'test')
+
+        then: "I get the same one back"
+        m2
+        m2.id == m1.id
+    }
+
+    void "test add uri to identifier"() {
+        when: "I add a match to an identiifer that is already there"
+        Identifier i1 = mappingService.findIdentifier('apni', 'name', 54433, null)
+        Match m1 = mappingService.findMatch('name/apni/54433')
+        Boolean s1 = mappingService.addUriToIdentifier(i1, m1, false)
+
+        then: "It succeeds"
+        s1
+
+        when: "I add a new URI to an identifier"
+        Match m2 = mappingService.addMatch('floop/floop/3', 'test')
+        Boolean s2 = mappingService.addUriToIdentifier(i1, m2, false)
+        Tuple2<Identifier, Match> t2 = mappingService.getMatchIdentity('floop/floop/3')
+
+        then: "It succeeds"
+        s2
+        t2
+        t2[0].id == i1.id
+
+        when: "I add a new URI and make it preferred"
+        Match m3 = mappingService.addMatch('floop/floop/boop', 'test')
+        Boolean s3 = mappingService.addUriToIdentifier(i1, m3, true)
+        Tuple2<Identifier, Match> t3 = mappingService.getMatchIdentity('floop/floop/boop')
+
+        then: "It succeeds"
+        s3
+        t3
+        t3[0].id == i1.id
+        t3[0].preferredUriID == m3.id
+
+        when: "I make the first URI preferred"
+        Boolean s4 = mappingService.addUriToIdentifier(mappingService.getIdentifier(i1.id), m1, true)
+        Identifier i4 = mappingService.getIdentifier(i1.id)
+
+        then: "It succeeds"
+        s4
+        i4.preferredUriID == m1.id
+
+    }
+
+    void "test stats"() {
+        when: "I call stats"
+        Map stats = mappingService.stats()
+        println stats
+
+        then:
+        stats
+        stats.identifiers
+        stats.matches
+        stats.hosts
+        stats.orphanMatch
+        stats.orphanIdentifier
+    }
+
+    void "test remove identifier from uri"() {
+        given:
+        Identifier identifier = mappingService.addIdentifier('animals', 'cat',
+                1, null, null, 'fred')
+        Match match = mappingService.addMatch('pussie/1', 'fred')
+        mappingService.addUriToIdentifier(identifier, match, false)
+
+        expect:
+        identifier
+        match
+        mappingService.getlinks('animals', 'cat', 1).size() == 2
+
+        when: "I remove the preferred match"
+        Boolean s1 = mappingService.removeIdentityFromUri(identifier.preferredUri, identifier)
+        identifier = mappingService.getIdentifier(identifier.id)
+
+        then:
+        s1
+        identifier
+        identifier.preferredUriID == null
+        mappingService.getlinks('animals', 'cat', 1).size() == 1
+
     }
 }
