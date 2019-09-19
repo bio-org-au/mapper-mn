@@ -4,6 +4,7 @@ micronaut:
   server:
     max-request-size: 4mb
     multipart.max-file-size: 4mb  #todo remove when bug fixed https://github.com/micronaut-projects/micronaut-core/issues/1882
+    netty.log-level: DEBUG
 #  router:
 #    static-resources:
 #      swagger:
@@ -14,6 +15,7 @@ micronaut:
     endpoints:
       login:
         enabled: true
+        path: /api/login
       oauth:
         enabled: true
     token:

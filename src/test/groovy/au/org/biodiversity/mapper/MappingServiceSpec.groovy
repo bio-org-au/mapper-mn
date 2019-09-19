@@ -393,6 +393,45 @@ class MappingServiceSpec extends Specification {
         identifier
         identifier.preferredUriID == null
         mappingService.getlinks('animals', 'cat', 1).size() == 1
+    }
+
+    void "test delete identifier"() {
+        given:
+        Identifier identifier = mappingService.addIdentifier('animals', 'bird',
+                1, null, null, 'fred')
+
+        expect:
+        identifier
+        identifier.preferredUriID
+        !identifier.deleted
+
+        when: "I delete an identifier"
+        identifier = mappingService.deleteIdentifier(identifier, 'I want to delete this')
+
+        then: "it works and set the reason"
+        identifier.deleted
+        identifier.reasonDeleted == 'I want to delete this'
+
+        when: "I delete a deleted identifier"
+        identifier = mappingService.deleteIdentifier(identifier, 'I want to make this die')
+
+        then: "It works and changes the reason"
+        identifier.deleted
+        identifier.reasonDeleted == 'I want to make this die'
+
+        when: "I delete an identifier with blank reason"
+        mappingService.deleteIdentifier(identifier, '')
+
+        then: "chucks a wobbly"
+        IllegalArgumentException ex1 = thrown()
+        ex1.message == 'Reason cannot be null or blank.'
+
+        when: "I delete an identifier with null reason"
+        mappingService.deleteIdentifier(identifier, null)
+
+        then: "chucks a wobbly"
+        IllegalArgumentException ex2 = thrown()
+        ex2.message == 'Reason cannot be null or blank.'
 
     }
 }

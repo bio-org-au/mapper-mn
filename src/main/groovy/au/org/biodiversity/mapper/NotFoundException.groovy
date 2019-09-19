@@ -5,7 +5,7 @@ package au.org.biodiversity.mapper
  * Date: 13/9/19
  *
  */
-class NotFoundException extends Throwable{
+class NotFoundException extends RuntimeException {
     NotFoundException(String message) {
         super(message)
     }

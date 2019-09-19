@@ -1,21 +1,22 @@
 package au.org.biodiversity.mapper
 
+import io.micronaut.http.HttpHeaders
+import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.runtime.server.EmbeddedServer
+import io.micronaut.security.token.jwt.render.BearerAccessRefreshToken
 import io.micronaut.test.annotation.MicronautTest
 import io.reactivex.Flowable
-import org.junit.Ignore
 import spock.lang.Specification
+
 import javax.inject.Inject
 
-import static io.micronaut.http.HttpRequest.DELETE
-import static io.micronaut.http.HttpRequest.GET
-import static io.micronaut.http.HttpRequest.PUT
-import static io.micronaut.http.HttpRequest.POST
+import static io.micronaut.http.HttpRequest.*
 
 /**
  * User: pmcneil
@@ -37,7 +38,7 @@ class ApiControllerSpec extends Specification {
 
     void "test getting preferred host"() {
         when: "I ask for pref host"
-        Map resp = httpCallMap('preferred-host')
+        Map resp = httpCallMap('preferred-host',null)
 
         then:
         resp.host == 'http://localhost:8080'
@@ -45,13 +46,13 @@ class ApiControllerSpec extends Specification {
 
     void "test getting preferred link"() {
         when: "I ask for preferred link"
-        Map resp = httpCallMap('preferred-link/name/apni/54433')
+        Map resp = httpCallMap('preferred-link/name/apni/54433',null)
 
         then:
         resp.link == 'http://localhost:8080/name/apni/54433'
 
         when: "I ask for preferred link that doesn't exist"
-        resp = httpCallMap('preferred-link/name/apni/99999')
+        httpCallMap('preferred-link/name/apni/99999',null)
 
         then:
         HttpClientResponseException notFound = thrown()
@@ -60,7 +61,7 @@ class ApiControllerSpec extends Specification {
 
     void "test getting links"() {
         when: "I ask for links"
-        List<Map> resp = httpCallList('links/name/apni/54433')
+        List<Map> resp = httpCallList('links/name/apni/54433',null)
 
         then:
         resp.size() == 2
@@ -70,7 +71,7 @@ class ApiControllerSpec extends Specification {
 
 
         when: "I ask for preferred link that doesn't exist"
-        resp = httpCallList('links/name/apni/99999')
+        httpCallList('links/name/apni/99999',null)
 
         then:
         HttpClientResponseException notFound = thrown()
@@ -80,7 +81,7 @@ class ApiControllerSpec extends Specification {
     void "test getting identity for a uri"() {
         when: "I ask for the identity"
         String encodedUrl = URLEncoder.encode('http://localhost:8080/name/apni/54433', 'UTF-8')
-        List<Map> resp = httpCallList('/current-identity?uri=' + encodedUrl)
+        List<Map> resp = httpCallList('/current-identity?uri=' + encodedUrl, null)
 
         then: "We expect a list of identities"
         resp.size() == 1
@@ -90,7 +91,7 @@ class ApiControllerSpec extends Specification {
         resp[0].versionNumber == 0
 
         when: "I ask for preferred link that doesn't exist"
-        httpCallList('current-identity?uri=http://localhost:8080/name/apni/99999')
+        httpCallList('current-identity?uri=http://localhost:8080/name/apni/99999', null)
 
         then:
         HttpClientResponseException notFound = thrown()
@@ -98,13 +99,19 @@ class ApiControllerSpec extends Specification {
 
         when: "I ask for a match that has no identities, but exists"
         encodedUrl = URLEncoder.encode('http://localhost:8080/no-identifier/match', 'UTF-8')
-        resp = httpCallList('/current-identity?uri=' + encodedUrl)
+        resp = httpCallList('/current-identity?uri=' + encodedUrl, null)
 
         then: "We expect a list of no identities"
         resp.size() == 0
     }
 
     void "test add identifier"() {
+        given:
+        String token = login()
+
+        expect:
+        token
+
         when: "I put an identifier"
         //    @Put("/add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
         UriBuilder uri = UriBuilder.of('/add-identifier')
@@ -114,7 +121,7 @@ class ApiControllerSpec extends Specification {
         uri.queryParam('versionNumber', versionNumber)
         uri.queryParam('uri', setUri)
 
-        Map resp = httpPutCallMap(uri.toString(), [:])
+        Map resp = httpPutCallMap(uri.toString(), [:], token)
 
         then: "I get the identifier object back"
         resp
@@ -134,10 +141,16 @@ class ApiControllerSpec extends Specification {
     }
 
     void "test new add (identifier)"() {
-        //    @Put("/add/{objectType}/{nameSpace}/{idNumber}")
+        given:
+        String token = login()
+
+        expect:
+        token
+
+//    @Put("/add/{objectType}/{nameSpace}/{idNumber}")
         when: "I put an identifier"
         String uri = "/add/$objectType/$nameSpace/$idNumber"
-        Map resp = httpPutCallMap(uri, [uri: setUri])
+        Map resp = httpPutCallMap(uri, [uri: setUri], token)
 
         then: "I get the identifier object back"
         resp
@@ -155,10 +168,16 @@ class ApiControllerSpec extends Specification {
     }
 
     void "test new add versioned (identifier)"() {
+        given:
+        String token = login()
+
+        expect:
+        token
+
         //     @Put("/add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}")
         when: "I put an identifier"
         String uri = "/add/$nameSpace/$objectType/$versionNumber/$idNumber"
-        Map resp = httpPutCallMap(uri, [uri: setUri])
+        Map resp = httpPutCallMap(uri, [uri: setUri], token)
 
         then: "I get the identifier object back"
         resp
@@ -176,8 +195,14 @@ class ApiControllerSpec extends Specification {
     }
 
     void "test add/set preferred host"() {
+        given:
+        String token = login()
+
+        expect:
+        token
+
         when:
-        Map r1 = httpPutCallMap('/add-host', [hostName: 'mcneils.net'])
+        Map r1 = httpPutCallMap('/add-host', [hostName: 'mcneils.net'], token)
 
         then:
         r1
@@ -186,7 +211,7 @@ class ApiControllerSpec extends Specification {
         r1.host.preferred == false
 
         when: "I add it again I get back the same host"
-        Map r2 = httpPutCallMap('/add-host', [hostName: 'mcneils.net'])
+        Map r2 = httpPutCallMap('/add-host', [hostName: 'mcneils.net'], token)
 
         then:
         r2
@@ -194,7 +219,7 @@ class ApiControllerSpec extends Specification {
         r2.host.hostName == r1.host.hostName
 
         when: "I set it as preferred"
-        Map r3 = httpPutCallMap('/set-preferred-host', [hostName: 'mcneils.net'])
+        Map r3 = httpPutCallMap('/set-preferred-host', [hostName: 'mcneils.net'], token)
 
         then: "it is set"
         r3
@@ -202,20 +227,26 @@ class ApiControllerSpec extends Specification {
         r3.host.id == r2.host.id
 
         when: "I set a non existent host as preferred"
-        Map r4 = httpPutCallMap('/set-preferred-host', [hostName: 'neils.net'])
+        httpPutCallMap('/set-preferred-host', [hostName: 'neils.net'], token)
 
         then: "not found exception"
         HttpClientResponseException notFound = thrown()
         notFound.message == "Page Not Found"
 
         cleanup:
-        httpPutCallMap('/set-preferred-host', [hostName: 'localhost:8080'])
+        httpPutCallMap('/set-preferred-host', [hostName: 'localhost:8080'], token)
     }
 
     void "test bulk add"() {
+        given:
+        String token = login()
+
+        expect:
+        token
+
         when:
         Set<Map> bulkTreeIds = TestHelpers.getBulkTreeIds()
-        Map r1 = httpPostCallMap('/bulk-add-identifiers', [identifiers: bulkTreeIds])
+        Map r1 = httpPostCallMap('/bulk-add-identifiers', [identifiers: bulkTreeIds], token)
 
         then:
         r1
@@ -223,7 +254,7 @@ class ApiControllerSpec extends Specification {
         r1.message == '36040 identities added.'
 
         when: "I remove them"
-        Map r2 = httpPostCallMap('/bulk-remove-identifiers', [identifiers: bulkTreeIds])
+        Map r2 = httpPostCallMap('/bulk-remove-identifiers', [identifiers: bulkTreeIds], token)
         Thread.sleep(10000) //wait for the orphans to be removed
 
         then:
@@ -235,13 +266,19 @@ class ApiControllerSpec extends Specification {
     }
 
     void "test add uri to identifier"() {
+        given:
+        String token = login()
+
+        expect:
+        token
+
         when: "When I add a new URI to an existing identifier"
         UriBuilder uri = UriBuilder.of('/add-uri-to-identifier')
         uri.queryParam('nameSpace', 'apni')
         uri.queryParam('objectType', 'name')
         uri.queryParam('idNumber', 54433)
         uri.queryParam('uri', '54433/apni/name')
-        Map r1 = httpPutCallMap(uri.toString(), [:])
+        Map r1 = httpPutCallMap(uri.toString(), [:], token)
 
         then: "It all succeeds"
         r1
@@ -256,7 +293,7 @@ class ApiControllerSpec extends Specification {
         uri2.queryParam('objectType', 'name')
         uri2.queryParam('idNumber', 0)
         uri2.queryParam('uri', 'this/wont/work')
-        httpPutCallMap(uri2.toString(), [:])
+        httpPutCallMap(uri2.toString(), [:], token)
 
         then:
         HttpClientResponseException notFound = thrown()
@@ -270,8 +307,9 @@ class ApiControllerSpec extends Specification {
 
     void "test move Identity"() {
         given:
-        Map r1 = httpPutCallMap("/add/dog/animals/23", [uri: null])
-        Map r2 = httpPutCallMap("/add/dog/animals/24", [uri: null])
+        String token = login()
+        Map r1 = httpPutCallMap("/add/dog/animals/23", [uri: null], token)
+        Map r2 = httpPutCallMap("/add/dog/animals/24", [uri: null], token)
         List<Map> l1 = mappingService.getlinks('animals', 'dog', 23)
         List<Map> l2 = mappingService.getlinks('animals', 'dog', 24)
 
@@ -284,7 +322,7 @@ class ApiControllerSpec extends Specification {
         when: "I try to move"
         Map r3 = httpPostCallMap('/move-identity',
                 [fromNameSpace: 'animals', fromObjectType: 'dog', fromIdNumber: 24,
-                 toNameSpace  : 'animals', toObjectType: 'dog', toIdNumber: 23])
+                 toNameSpace  : 'animals', toObjectType: 'dog', toIdNumber: 23], token)
         l1 = mappingService.getlinks('animals', 'dog', 23)
         l2 = mappingService.getlinks('animals', 'dog', 24)
         println l1
@@ -298,7 +336,7 @@ class ApiControllerSpec extends Specification {
         when: "move an identity that doesn't exist"
         httpPostCallMap('/move-identity',
                 [fromNameSpace: 'animals', fromObjectType: 'dog', fromIdNumber: 25,
-                 toNameSpace  : 'animals', toObjectType: 'dog', toIdNumber: 23])
+                 toNameSpace  : 'animals', toObjectType: 'dog', toIdNumber: 23], token)
 
         then: "get a not found"
         HttpClientResponseException notFound = thrown()
@@ -307,7 +345,7 @@ class ApiControllerSpec extends Specification {
         when: "move an identity that doesn't exist"
         httpPostCallMap('/move-identity',
                 [fromNameSpace: 'animals', fromObjectType: 'dog', fromIdNumber: 24,
-                 toNameSpace  : 'animals', toObjectType: 'dog', toIdNumber: 25])
+                 toNameSpace  : 'animals', toObjectType: 'dog', toIdNumber: 25], token)
 
         then: "get a not found"
         HttpClientResponseException notFound2 = thrown()
@@ -317,6 +355,7 @@ class ApiControllerSpec extends Specification {
 
     void "test remove Identity from uri"() {
         given:
+        String token = login()
         Identifier identifier = mappingService.addIdentifier('animals', 'dog',
                 1, null, null, 'fred')
         Match match = mappingService.addMatch('doggies/1', 'fred')
@@ -334,13 +373,13 @@ class ApiControllerSpec extends Specification {
         uri.queryParam('objectType', 'dog')
         uri.queryParam('idNumber', 1)
         uri.queryParam('uri', 'doggies/1')
-        Map r1 = httpDeleteCallMap(uri.toString(), [:])
+        Map r1 = httpDeleteCallMap(uri.toString(), [:], token)
 
         then: "It all succeeds"
         r1
         r1.success
         r1.message == 'Identifier removed from URI.'
-        r1.identitifier
+        r1.identifier
         mappingService.getlinks('animals', 'dog', 1).size() == 1
         mappingService.stats().orphanMatch == orphans + 1
 
@@ -350,7 +389,7 @@ class ApiControllerSpec extends Specification {
         u2.queryParam('objectType', 'dog')
         u2.queryParam('idNumber', 1)
         u2.queryParam('uri', 'doggies/3')
-        httpDeleteCallMap(u2.toString(), [:])
+        httpDeleteCallMap(u2.toString(), [:], token)
 
         then: "get a not found"
         HttpClientResponseException notFound = thrown()
@@ -362,45 +401,115 @@ class ApiControllerSpec extends Specification {
         u3.queryParam('objectType', 'dog')
         u3.queryParam('idNumber', 4)
         u3.queryParam('uri', 'doggies/1')
-        httpDeleteCallMap(u3.toString(), [:])
+        httpDeleteCallMap(u3.toString(), [:], token)
 
         then: "get a not found"
         HttpClientResponseException notFound2 = thrown()
         notFound2.message == "Identifier doesn't exist."
     }
 
+    void "test delete identifier"() {
+        given:
+        String token = login()
+        Identifier identifier = mappingService.addIdentifier('animals', 'rat',
+                1, null, null, 'fred')
+
+        expect:
+        identifier
+        identifier.preferredUriID
+        !identifier.deleted
+        token
+
+        when: "I delete an identifier"
+        UriBuilder u1 = UriBuilder.of('/delete-identifier')
+        u1.queryParam('nameSpace', 'animals')
+        u1.queryParam('objectType', 'rat')
+        u1.queryParam('idNumber', 1)
+        u1.queryParam('reason', 'just for kicks')
+        Map r1 = httpDeleteCallMap(u1.toString(), [:], token)
+
+        then:
+        r1
+        r1.success
+        r1.identifier
+        r1.identifier.deleted
+        r1.identifier.reasonDeleted == 'just for kicks'
+
+        when: "I delete sans reason"
+        UriBuilder u2 = UriBuilder.of('/delete-identifier')
+        u2.queryParam('nameSpace', 'animals')
+        u2.queryParam('objectType', 'rat')
+        u2.queryParam('idNumber', 1)
+        httpDeleteCallMap(u2.toString(), [:], token)
+
+        then:
+        HttpClientResponseException e = thrown()
+        e.status == HttpStatus.BAD_REQUEST
+        e.message == "Reason cannot be null or blank."
+
+        when: "I delete non-existent ident "
+        UriBuilder u3 = UriBuilder.of('/delete-identifier')
+        u3.queryParam('nameSpace', 'animals')
+        u3.queryParam('objectType', 'rat')
+        u3.queryParam('idNumber', 2)
+        httpDeleteCallMap(u3.toString(), [:], token)
+
+        then:
+        HttpClientResponseException e2 = thrown()
+        e2.status == HttpStatus.NOT_FOUND
+        e2.message == 'Identifier doesn\'t exist.'
+    }
+
     //*** helpers ***
-    private Map httpPostCallMap(String uri, Map body) {
+
+    private String login() {
+        HttpRequest request = HttpRequest.POST('/login', '{"username":"sherlock","password":"password"}')
+        HttpResponse<BearerAccessRefreshToken> rsp = client.toBlocking().exchange(request, BearerAccessRefreshToken)
+        assert rsp.status == HttpStatus.OK
+        return rsp.body().accessToken
+    }
+
+    private Map httpPostCallMap(String uri, Map body, String accessToken) {
         Flowable<HttpResponse<Map>> call = client.exchange(
-                POST(uri, body), Map.class
+                POST(uri, body)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                , Map.class
         )
         return call.blockingFirst().body()
     }
 
-    private Map httpDeleteCallMap(String uri, Map body) {
+    private Map httpDeleteCallMap(String uri, Map body, String accessToken) {
         Flowable<Map> call = client.retrieve(
-                DELETE(uri, body), Map.class
+                DELETE(uri, body)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                , Map.class
         )
         return call.blockingFirst()
     }
 
-    private Map httpPutCallMap(String uri, Map body) {
+    private Map httpPutCallMap(String uri, Map body, String accessToken) {
         Flowable<Map> call = client.retrieve(
-                PUT(uri, body), Map.class
+                PUT(uri, body)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                , Map.class
         )
         return call.blockingFirst()
     }
 
-    private Map httpCallMap(String uri) {
+    private Map httpCallMap(String uri, String accessToken) {
         Flowable<Map> call = client.retrieve(
-                GET(uri), Map.class
+                GET(uri)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                , Map.class
         )
         return call.blockingFirst()
     }
 
-    private List<Map> httpCallList(String uri) {
+    private List<Map> httpCallList(String uri, String accessToken) {
         Flowable<List<Map>> call = client.retrieve(
-                GET(uri), List.class
+                GET(uri)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                , List.class
         )
         return call.blockingFirst()
     }

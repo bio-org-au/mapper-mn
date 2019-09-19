@@ -155,4 +155,6 @@ interface MappingService {
     Host getHost(Match match)
 
     Identifier getIdentifier(Long id)
+
+    Identifier deleteIdentifier(Identifier identifier, String reason)
 }

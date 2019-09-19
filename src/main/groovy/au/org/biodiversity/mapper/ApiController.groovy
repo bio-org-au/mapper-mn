@@ -1,31 +1,22 @@
 package au.org.biodiversity.mapper
 
-import io.micronaut.context.annotation.Parameter
 import io.micronaut.context.annotation.Property
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
-import io.micronaut.http.annotation.Body
-import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Delete
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.annotation.PathVariable
-import io.micronaut.http.annotation.Post
-import io.micronaut.http.annotation.Produces
-import io.micronaut.http.annotation.Put
-import io.micronaut.http.annotation.QueryValue
+import io.micronaut.http.annotation.*
 import io.micronaut.http.hateoas.JsonError
-import io.reactivex.Maybe
+import io.micronaut.security.annotation.Secured
+import io.micronaut.security.rules.SecurityRule
 
-import javax.annotation.Nullable
 import javax.annotation.security.PermitAll
 import javax.inject.Inject
-import javax.validation.constraints.NotBlank
 
 /**
  * User: pmcneil
  * Date: 9/9/19
  *
  */
+@Secured(SecurityRule.IS_AUTHENTICATED)
 @Controller("/api")
 class ApiController {
     @Inject
@@ -75,9 +66,15 @@ class ApiController {
         return links
     }
 
-//**** Secured endpoints TODO secure
-
     @PermitAll
+    @Produces(MediaType.TEXT_JSON)
+    @Get("/stats")
+    Map stats() {
+        mappingService.stats()
+    }
+
+//**** Secured endpoints
+
     @Produces(MediaType.TEXT_JSON)
     @Put("/add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     Map addIdentifierV1(@QueryValue Optional<String> nameSpace,
@@ -95,7 +92,6 @@ class ApiController {
         return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
 
-    @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Put("/add/{objectType}/{nameSpace}/{idNumber}")
     Map addNonVersionedIdentifier(@PathVariable String nameSpace,
@@ -113,7 +109,6 @@ class ApiController {
         return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
 
-    @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Put("/add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}")
     Map addVersionedIdentifier(@PathVariable String nameSpace,
@@ -133,7 +128,6 @@ class ApiController {
         return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
 
-    @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Put("/add-host")
     Map addHost(@Body Map body) {
@@ -142,7 +136,6 @@ class ApiController {
         return [host: host]
     }
 
-    @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Put("/set-preferred-host")
     Map setPreferredHost(@Body Map body) {
@@ -155,7 +148,6 @@ class ApiController {
         }
     }
 
-    @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Post("/bulk-add-identifiers")
     HttpResponse bulkAddIdentifiers(@Body Map body) {
@@ -166,7 +158,6 @@ class ApiController {
         return HttpResponse.serverError()
     }
 
-    @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Post("/bulk-remove-identifiers")
     HttpResponse bulkRemoveIdentifiers(@Body Map body) {
@@ -177,7 +168,6 @@ class ApiController {
         return HttpResponse.serverError()
     }
 
-    @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Put("/add-uri-to-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}{?preferred}")
     HttpResponse addURI(@QueryValue Optional<String> nameSpace,
@@ -185,7 +175,7 @@ class ApiController {
                         @QueryValue Optional<Long> idNumber,
                         @QueryValue Optional<Long> versionNumber,
                         @QueryValue Optional<String> uri,
-                        @QueryValue Optional<Boolean> preferred ) {
+                        @QueryValue Optional<Boolean> preferred) {
         Identifier identifier = mappingService.findIdentifier(nameSpace.get(), objectType.get(), idNumber.get(), versionNumber.orElse(null))
         if (identifier) {
             Match match = mappingService.addMatch(uri.get(), 'fred')
@@ -197,7 +187,6 @@ class ApiController {
         return HttpResponse.<JsonError> notFound(new JsonError('Identifier not found'))
     }
 
-    @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Post("/move-identity")
     HttpResponse moveIdentity(@Body Map body) {
@@ -215,7 +204,6 @@ class ApiController {
         return HttpResponse.<JsonError> notFound(new JsonError("From identifier doesn't exist."))
     }
 
-    @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Delete("/remove-identifier-from-uri{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     HttpResponse removeIdentityFromUri(@QueryValue Optional<String> nameSpace,
@@ -228,7 +216,7 @@ class ApiController {
             Match match = mappingService.findMatch(uri.get())
             if (match) {
                 if (mappingService.removeIdentityFromUri(match, identifier)) {
-                    return HttpResponse.<Map> ok(success: true, message: 'Identifier removed from URI.', identitifier: identifier)
+                    return HttpResponse.<Map> ok(success: true, message: 'Identifier removed from URI.', identifier: identifier)
                 }
                 return HttpResponse.serverError(new JsonError("Couldn't remove Identifier"))
             }
@@ -237,7 +225,26 @@ class ApiController {
         return HttpResponse.<JsonError> notFound(new JsonError("Identifier doesn't exist."))
     }
 
-    HttpResponse deleteIdentifier() {
+    @Produces(MediaType.TEXT_JSON)
+    @Delete("/delete-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?reason}")
+    HttpResponse deleteIdentifier(@QueryValue Optional<String> nameSpace,
+                                  @QueryValue Optional<String> objectType,
+                                  @QueryValue Optional<Long> idNumber,
+                                  @QueryValue Optional<Long> versionNumber,
+                                  @QueryValue Optional<String> reason) {
+        Identifier identifier = mappingService.findIdentifier(nameSpace.get(), objectType.get(), idNumber.get(), versionNumber.orElse(null))
+        if (identifier) {
+            try {
+                Identifier refreshedIdentifier = mappingService.deleteIdentifier(identifier, reason.orElse(null))
+                if (refreshedIdentifier) {
+                    return HttpResponse.<Map> ok(success: true, message: 'Deleted Identifier.', identifier: refreshedIdentifier)
+                }
+                return HttpResponse.serverError(new JsonError("Couldn't delete Identifier"))
+            } catch (IllegalArgumentException iae) {
+                return HttpResponse.badRequest(new JsonError(iae.message))
+            }
+        }
+        return HttpResponse.<JsonError> notFound(new JsonError("Identifier doesn't exist."))
     }
 
 }

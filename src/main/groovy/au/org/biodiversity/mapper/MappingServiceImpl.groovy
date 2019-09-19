@@ -579,6 +579,20 @@ class MappingServiceImpl implements MappingService {
         }
     }
 
+    @Override
+    Identifier deleteIdentifier(Identifier identifier, String reason) {
+        if(!reason) {
+            throw new IllegalArgumentException("Reason cannot be null or blank.")
+        }
+        withSql {Sql sql ->
+            sql.withTransaction {
+                sql.executeUpdate('update mapper.identifier set deleted = true, reason_deleted = :reason where id = :id',
+                [reason: reason, id: identifier.id])
+            }
+            return getIdentifier(identifier.id)
+        }
+    }
+
 // *** private ***
 
     static Host findHost(String hostName, Sql sql) {
