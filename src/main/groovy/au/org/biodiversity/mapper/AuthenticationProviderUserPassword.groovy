@@ -1,5 +1,6 @@
 package au.org.biodiversity.mapper
 
+import io.micronaut.context.annotation.Property
 import io.micronaut.security.authentication.AuthenticationFailed
 import io.micronaut.security.authentication.AuthenticationProvider
 import io.micronaut.security.authentication.AuthenticationRequest
@@ -17,11 +18,16 @@ import javax.inject.Singleton
  */
 @Singleton
 class AuthenticationProviderUserPassword implements AuthenticationProvider {
+
+    @Property(name = 'mapper.auth')
+    Map authMap
+
     @Override
     Publisher<AuthenticationResponse> authenticate(AuthenticationRequest authenticationRequest) {
-        if ( authenticationRequest.getIdentity().equals("sherlock") &&
-                authenticationRequest.getSecret().equals("password") ) {
-            return Flowable.just(new UserDetails((String) authenticationRequest.getIdentity(), new ArrayList<>()))
+        String username = authenticationRequest.getIdentity()
+        Map authData = authMap[username] as Map
+        if ( authData && authenticationRequest.getSecret().equals(authData.secret) ) {
+            return Flowable.just(new UserDetails((String) authenticationRequest.getIdentity(), authData.roles as List))
         }
         return Flowable.just(new AuthenticationFailed())
     }

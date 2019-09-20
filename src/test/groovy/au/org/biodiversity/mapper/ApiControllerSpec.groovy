@@ -9,6 +9,8 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.runtime.server.EmbeddedServer
+import io.micronaut.security.token.jwt.endpoints.TokenRefreshRequest
+import io.micronaut.security.token.jwt.render.AccessRefreshToken
 import io.micronaut.security.token.jwt.render.BearerAccessRefreshToken
 import io.micronaut.test.annotation.MicronautTest
 import io.reactivex.Flowable
@@ -36,9 +38,33 @@ class ApiControllerSpec extends Specification {
     @Client(value = "/api/", configuration = TestHttpClientConfiguration.class)
     HttpClient client
 
+    void "test auth"() {
+        when:
+        HttpRequest request = POST('/login', '{"username":"TEST-services","password":"buy-me-a-pony"}')
+        HttpResponse<BearerAccessRefreshToken> rsp = client.toBlocking().exchange(request, BearerAccessRefreshToken)
+
+
+        then:
+        rsp.status == HttpStatus.OK
+
+        when:
+        sleep(1000)
+        String refreshToken = rsp.body().refreshToken
+        String accessToken = rsp.body().accessToken
+
+        HttpResponse<AccessRefreshToken> response = client.toBlocking().exchange(
+                POST('/oauth/access_token', new TokenRefreshRequest("refresh_token", refreshToken)),
+                AccessRefreshToken)
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().accessToken
+        response.body().accessToken != accessToken
+    }
+
     void "test getting preferred host"() {
         when: "I ask for pref host"
-        Map resp = httpCallMap('preferred-host',null)
+        Map resp = httpCallMap('preferred-host', null)
 
         then:
         resp.host == 'http://localhost:8080'
@@ -46,13 +72,13 @@ class ApiControllerSpec extends Specification {
 
     void "test getting preferred link"() {
         when: "I ask for preferred link"
-        Map resp = httpCallMap('preferred-link/name/apni/54433',null)
+        Map resp = httpCallMap('preferred-link/name/apni/54433', null)
 
         then:
         resp.link == 'http://localhost:8080/name/apni/54433'
 
         when: "I ask for preferred link that doesn't exist"
-        httpCallMap('preferred-link/name/apni/99999',null)
+        httpCallMap('preferred-link/name/apni/99999', null)
 
         then:
         HttpClientResponseException notFound = thrown()
@@ -61,7 +87,7 @@ class ApiControllerSpec extends Specification {
 
     void "test getting links"() {
         when: "I ask for links"
-        List<Map> resp = httpCallList('links/name/apni/54433',null)
+        List<Map> resp = httpCallList('links/name/apni/54433', null)
 
         then:
         resp.size() == 2
@@ -71,7 +97,7 @@ class ApiControllerSpec extends Specification {
 
 
         when: "I ask for preferred link that doesn't exist"
-        httpCallList('links/name/apni/99999',null)
+        httpCallList('links/name/apni/99999', null)
 
         then:
         HttpClientResponseException notFound = thrown()
@@ -285,7 +311,9 @@ class ApiControllerSpec extends Specification {
         r1.success
         r1.message
         r1.match.uri == '54433/apni/name'
+        r1.match.updatedBy == 'TEST-services'
         r1.identifier.idNumber == 54433
+        r1.identifier.updatedBy == 'pmcneil'
 
         when: "When I try and add a URI to a non existant identifier"
         UriBuilder uri2 = UriBuilder.of('/add-uri-to-identifier')
@@ -315,7 +343,11 @@ class ApiControllerSpec extends Specification {
 
         expect:
         r1
+        r1.identifier
+        r1.identifier.updatedBy == 'TEST-services'
         r2
+        r2.identifier
+        r2.identifier.updatedBy == 'TEST-services'
         l1.size() == 1
         l2.size() == 1
 
@@ -463,7 +495,7 @@ class ApiControllerSpec extends Specification {
     //*** helpers ***
 
     private String login() {
-        HttpRequest request = HttpRequest.POST('/login', '{"username":"sherlock","password":"password"}')
+        HttpRequest request = POST('/login', '{"username":"TEST-services","password":"buy-me-a-pony"}')
         HttpResponse<BearerAccessRefreshToken> rsp = client.toBlocking().exchange(request, BearerAccessRefreshToken)
         assert rsp.status == HttpStatus.OK
         return rsp.body().accessToken
@@ -513,5 +545,4 @@ class ApiControllerSpec extends Specification {
         )
         return call.blockingFirst()
     }
-
 }

@@ -35,4 +35,17 @@ mapper {
         xml = htmlResolver
         rdf = {Identifier ident -> return null}
     }
+
+    auth = [
+            'TEST-services': [
+                    secret: 'buy-me-a-pony',
+                    application: 'services',
+                    roles      : ['admin'],
+            ],
+            'TEST-editor': [
+                    secret: 'I-am-a-pony',
+                    application: 'editor',
+                    roles      : ['admin'],
+            ]
+    ]
 }

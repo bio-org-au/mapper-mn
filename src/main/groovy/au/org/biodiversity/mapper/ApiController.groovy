@@ -10,6 +10,7 @@ import io.micronaut.security.rules.SecurityRule
 
 import javax.annotation.security.PermitAll
 import javax.inject.Inject
+import java.security.Principal
 
 /**
  * User: pmcneil
@@ -81,14 +82,14 @@ class ApiController {
                         @QueryValue Optional<String> objectType,
                         @QueryValue Optional<Long> idNumber,
                         @QueryValue Optional<Long> versionNumber,
-                        @QueryValue Optional<String> uri) {
+                        @QueryValue Optional<String> uri, Principal principal) {
         println "Add identifier $nameSpace, $objectType, $idNumber, $versionNumber -> $uri"
         Identifier identifier = mappingService.addIdentifier(nameSpace.get(),
                 objectType.get(),
                 idNumber.get(),
                 versionNumber.orElse(null),
                 uri.orElse(null),
-                'fred') //todo add user
+                principal.getName())
         return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
 
@@ -97,7 +98,7 @@ class ApiController {
     Map addNonVersionedIdentifier(@PathVariable String nameSpace,
                                   @PathVariable String objectType,
                                   @PathVariable Long idNumber,
-                                  @Body Map body) {
+                                  @Body Map body, Principal principal) {
         String uri = body.uri
         println "Add $objectType/$nameSpace/$idNumber (uri: $uri)"
         Identifier identifier = mappingService.addIdentifier(nameSpace,
@@ -105,7 +106,7 @@ class ApiController {
                 idNumber,
                 null,
                 uri,
-                'fred') //todo add user
+                principal.getName())
         return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
 
@@ -115,7 +116,7 @@ class ApiController {
                                @PathVariable String objectType,
                                @PathVariable Long idNumber,
                                @PathVariable Long versionNumber,
-                               @Body Map body
+                               @Body Map body, Principal principal
     ) {
         String uri = body.uri
         println "Add $objectType/$idNumber/$versionNumber -> namespace: $nameSpace, uri:$uri"
@@ -124,7 +125,7 @@ class ApiController {
                 idNumber,
                 versionNumber,
                 uri,
-                'fred')
+                principal.getName())
         return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
 
@@ -150,9 +151,9 @@ class ApiController {
 
     @Produces(MediaType.TEXT_JSON)
     @Post("/bulk-add-identifiers")
-    HttpResponse bulkAddIdentifiers(@Body Map body) {
+    HttpResponse bulkAddIdentifiers(@Body Map body, Principal principal) {
         Set<Map> identifiers = body.identifiers as Set<Map>
-        if (mappingService.bulkAddIdentifiers(identifiers, 'fred')) {
+        if (mappingService.bulkAddIdentifiers(identifiers, principal.getName())) {
             return HttpResponse.<Map> ok(success: true, message: "${identifiers.size()} identities added.".toString())
         }
         return HttpResponse.serverError()
@@ -175,10 +176,10 @@ class ApiController {
                         @QueryValue Optional<Long> idNumber,
                         @QueryValue Optional<Long> versionNumber,
                         @QueryValue Optional<String> uri,
-                        @QueryValue Optional<Boolean> preferred) {
+                        @QueryValue Optional<Boolean> preferred, Principal principal) {
         Identifier identifier = mappingService.findIdentifier(nameSpace.get(), objectType.get(), idNumber.get(), versionNumber.orElse(null))
         if (identifier) {
-            Match match = mappingService.addMatch(uri.get(), 'fred')
+            Match match = mappingService.addMatch(uri.get(), principal.getName())
             if (mappingService.addUriToIdentifier(identifier, match, preferred.orElse(false))) {
                 return HttpResponse.<Map> ok([success: true, message: 'uri added to identity', match: match, identifier: identifier])
             }

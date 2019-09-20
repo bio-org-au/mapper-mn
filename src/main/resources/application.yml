@@ -18,6 +18,7 @@ micronaut:
         path: /api/login
       oauth:
         enabled: true
+        path: /api/oauth/access_token
     token:
       jwt:
         enabled: true
