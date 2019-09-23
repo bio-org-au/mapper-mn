@@ -5,11 +5,6 @@ micronaut:
     max-request-size: 4mb
     multipart.max-file-size: 4mb  #todo remove when bug fixed https://github.com/micronaut-projects/micronaut-core/issues/1882
     netty.log-level: DEBUG
-#  router:
-#    static-resources:
-#      swagger:
-#        paths: classpath:META-INF/swagger
-#        mapping: /swagger/**
   security:
     enabled: true
     endpoints:

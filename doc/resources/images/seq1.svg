@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="53cm" height="25cm" viewBox="-1 -1 1044 483" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+    <rect style="fill: #ffffff" x="0" y="0" width="87.2" height="40"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="0" y="0" width="87.2" height="40"/>
+    <text font-size="12.7998" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="43.6" y="23.9">
+      <tspan x="43.6" y="23.9">Requester</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="700" y="0" width="80.35" height="40"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="700" y="0" width="80.35" height="40"/>
+    <text font-size="12.7998" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="740.175" y="23.9">
+      <tspan x="740.175" y="23.9">Mapper</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="840" y="0" width="81.6" height="40"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="840" y="0" width="81.6" height="40"/>
+    <text font-size="12.7998" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="880.8" y="23.9">
+      <tspan x="880.8" y="23.9">Service 1</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="960" y="0" width="81.6" height="40"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="960" y="0" width="81.6" height="40"/>
+    <text font-size="12.7998" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="1000.8" y="23.9">
+      <tspan x="1000.8" y="23.9">Service 2</tspan>
+    </text>
+  </g>
+  <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="40" y1="40" x2="40" y2="480"/>
+  <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="740.175" y1="40" x2="740" y2="480"/>
+  <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="880" y1="40" x2="880" y2="480"/>
+  <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="1000.8" y1="40" x2="1000" y2="480"/>
+  <g>
+    <rect style="fill: #ffffff" x="310" y="0" width="100" height="40"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="310" y="0" width="100" height="40"/>
+    <text font-size="12.7998" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="360" y="23.9">
+      <tspan x="360" y="23.9">Rev. Proxy</tspan>
+    </text>
+  </g>
+  <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="360" y1="40" x2="360" y2="480"/>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="40" y1="80" x2="349" y2="80"/>
+    <polygon style="fill: #000000" points="349,85 359,80 349,75 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="349,85 359,80 349,75 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="60" y="60">
+    <tspan x="60" y="60">GET https://id.bio.org.au/name/apni/1234</tspan>
+    <tspan x="60" y="76">Content-Type: text/html</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="360" y1="80" x2="729" y2="80"/>
+    <polygon style="fill: #000000" points="729,85 739,80 729,75 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="729,85 739,80 729,75 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="400" y="60">
+    <tspan x="400" y="60">GET //int.server/broker/name/apni/1234</tspan>
+    <tspan x="400" y="76">Content-type: text/html</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="740" y1="140" x2="51" y2="140"/>
+    <polygon style="fill: #000000" points="51,135 41,140 51,145 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="51,135 41,140 51,145 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="150" y="70">
+    <tspan x="150" y="70"></tspan>
+  </text>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="210" y="120">
+    <tspan x="210" y="120">303 redirect (see other)</tspan>
+    <tspan x="210" y="136">https://bio.org.au/nsl/services/rest/name/apni/70914</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="40" y1="200" x2="349" y2="200"/>
+    <polygon style="fill: #000000" points="349,205 359,200 349,195 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="349,205 359,200 349,195 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="50" y="180">
+    <tspan x="50" y="180">GET https://bio.org.au/nsl/services/rest/name/apni/70914</tspan>
+    <tspan x="50" y="196">Content-Type: text/html</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="360" y1="200" x2="869" y2="200"/>
+    <polygon style="fill: #000000" points="869,205 879,200 869,195 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="869,205 879,200 869,195 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="490" y="180">
+    <tspan x="490" y="180">Get //int.server1/nsl/services/rest/name/apni/70914</tspan>
+    <tspan x="490" y="196">Content-Type: text/html</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="880" y1="250" x2="51" y2="250"/>
+    <polygon style="fill: #000000" points="51,245 41,250 51,255 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="51,245 41,250 51,255 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="410" y="240">
+    <tspan x="410" y="240">&lt;html&gt;...content...&lt;/html&gt;</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="40" y1="310" x2="349" y2="310"/>
+    <polygon style="fill: #000000" points="349,315 359,310 349,305 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="349,315 359,310 349,305 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="60" y="290">
+    <tspan x="60" y="290">GET https://id.bio.org.au/name/apni/1234</tspan>
+    <tspan x="60" y="306">Content-Type: application/rdf+xml</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="360" y1="310" x2="729" y2="310"/>
+    <polygon style="fill: #000000" points="729,315 739,310 729,305 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="729,315 739,310 729,305 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="400" y="290">
+    <tspan x="400" y="290">GET //int.server/broker/name/apni/1234</tspan>
+    <tspan x="400" y="306">Content-type: application/rdf+xml</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="740" y1="370" x2="51" y2="370"/>
+    <polygon style="fill: #000000" points="51,365 41,370 51,375 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="51,365 41,370 51,375 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="210" y="350">
+    <tspan x="210" y="350">303 redirect (see other)</tspan>
+    <tspan x="210" y="366">https://bio.org.au/sparql/?query=DESCRIBE%20 &lt;name/apni/70914&gt;</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="40" y1="420" x2="349" y2="420"/>
+    <polygon style="fill: #000000" points="349,425 359,420 349,415 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="349,425 359,420 349,415 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="360" y1="420" x2="989" y2="420"/>
+    <polygon style="fill: #000000" points="989,425 999,420 989,415 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="989,425 999,420 989,415 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="50" y="400">
+    <tspan x="50" y="400">GET https://bio.org.au/sparql/?query=DESCRIBE%20 &lt;name/apni/70914&gt;</tspan>
+    <tspan x="50" y="416">Content-Type: application/rdf+xml</tspan>
+  </text>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="540" y="400">
+    <tspan x="540" y="400">GET //int.server2/sparql/?query=DESCRIBE%20 &lt;name/apni/70914&gt;</tspan>
+    <tspan x="540" y="416">Content-Type: application/rdf+xml</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="1000" y1="470" x2="51" y2="470"/>
+    <polygon style="fill: #000000" points="51,465 41,470 51,475 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="51,465 41,470 51,475 "/>
+  </g>
+  <text font-size="12.7998" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="400" y="460">
+    <tspan x="400" y="460">&lt;xml&gt;...rdf content...&lt;/xml&gt;</tspan>
+  </text>
+</svg>

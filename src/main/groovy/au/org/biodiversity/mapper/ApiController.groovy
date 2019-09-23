@@ -9,6 +9,7 @@ import io.micronaut.security.annotation.Secured
 import io.micronaut.security.rules.SecurityRule
 
 import javax.annotation.security.PermitAll
+import javax.annotation.security.RolesAllowed
 import javax.inject.Inject
 import java.security.Principal
 
@@ -76,6 +77,7 @@ class ApiController {
 
 //**** Secured endpoints
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Put("/add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     Map addIdentifierV1(@QueryValue Optional<String> nameSpace,
@@ -93,6 +95,7 @@ class ApiController {
         return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Put("/add/{objectType}/{nameSpace}/{idNumber}")
     Map addNonVersionedIdentifier(@PathVariable String nameSpace,
@@ -110,6 +113,7 @@ class ApiController {
         return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Put("/add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}")
     Map addVersionedIdentifier(@PathVariable String nameSpace,
@@ -129,6 +133,7 @@ class ApiController {
         return [identifier: identifier, uri: identifier.preferredUri.uri]
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Put("/add-host")
     Map addHost(@Body Map body) {
@@ -137,6 +142,7 @@ class ApiController {
         return [host: host]
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Put("/set-preferred-host")
     Map setPreferredHost(@Body Map body) {
@@ -149,6 +155,7 @@ class ApiController {
         }
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Post("/bulk-add-identifiers")
     HttpResponse bulkAddIdentifiers(@Body Map body, Principal principal) {
@@ -159,6 +166,7 @@ class ApiController {
         return HttpResponse.serverError()
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Post("/bulk-remove-identifiers")
     HttpResponse bulkRemoveIdentifiers(@Body Map body) {
@@ -169,6 +177,7 @@ class ApiController {
         return HttpResponse.serverError()
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Put("/add-uri-to-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}{?preferred}")
     HttpResponse addURI(@QueryValue Optional<String> nameSpace,
@@ -188,6 +197,7 @@ class ApiController {
         return HttpResponse.<JsonError> notFound(new JsonError('Identifier not found'))
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Post("/move-identity")
     HttpResponse moveIdentity(@Body Map body) {
@@ -205,6 +215,7 @@ class ApiController {
         return HttpResponse.<JsonError> notFound(new JsonError("From identifier doesn't exist."))
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Delete("/remove-identifier-from-uri{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     HttpResponse removeIdentityFromUri(@QueryValue Optional<String> nameSpace,
@@ -226,6 +237,7 @@ class ApiController {
         return HttpResponse.<JsonError> notFound(new JsonError("Identifier doesn't exist."))
     }
 
+    @RolesAllowed('admin')
     @Produces(MediaType.TEXT_JSON)
     @Delete("/delete-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?reason}")
     HttpResponse deleteIdentifier(@QueryValue Optional<String> nameSpace,

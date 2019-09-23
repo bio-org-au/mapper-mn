@@ -70,6 +70,7 @@ import au.org.biodiversity.mapper.Identifier
 
 mapper {
     resolverURL = 'http://localhost:7070/nsl-mapper'
+    contextExtension = '' //extension to the context path (after nsl-mapper).
     defaultProtocol = 'http'
     Map serviceHosts = [
             bpni: 'http://bpni.com',
@@ -102,10 +103,127 @@ mapper {
         xml = htmlResolver
         rdf = {Identifier ident -> return null}
     }
+
+    auth = [
+            'TEST-services': [
+                    secret: 'buy-me-a-pony',
+                    application: 'services',
+                    roles      : ['admin'],
+            ],
+            'TEST-editor': [
+                    secret: 'I-am-a-pony',
+                    application: 'editor',
+                    roles      : ['admin'],
+            ]
+    ]
 }
 ----
 
 == How it works
 
+The mappers job is to permanently link URLs (URIs) to resources through content negotiation. It acts as a service broker
+when given a resolvable URL.
+
+The aim is to use a URL as the ID for a resource. Being a URL it is resolvable, and depending on the content type
+requested different services may provide the resultant resource. The following sequence diagram shows the sequence of a
+content resolution request.
+
+.Sequence diagram of mapper requests
+image::seq1.svg[]
+
+=== Data structure
+To do it's job the Mapper needs to know the URLs to map to a particular resource. The mapper defines two entities to
+describe these:
+
+* Match: The URI string.
+* Identifier: The data used to uniquely identify a resource.
+
+The Match and Identifier are linked as Many to Many relationships, so an Identifier can have many Matches (the usual case)
+and a Match can have many Identifiers. The second case, where a Match has many Identifiers is used where there are many
+resources that describe a particular ID. The resources all together describe the thing Identified. An example may be a
+Taxanomic Name, which may have many concepts described in many publications by many authors. e.g.
+
+* https://id.biodiversity.org.au/A%20Bastard%20White%20Mahogany
+
+which returns a series of resources:
+
+    https://biodiversity.org.au/nsl/services/rest/name/apni/442093
+    https://biodiversity.org.au/nsl/services/rest/instance/apni/975779
+    https://biodiversity.org.au/nsl/services/rest/instance/apni/975776
+
+In the interests of speed and the typical use case, <<The Broker>> in this version of the mapper will redirect you to the first
+resource found. The idea is that it would be better to have a single summary resource that directed you to the other resources.
+
+The mapper also maps a Host to the URI (to make a URL). This allows historical URLs to work when a change of preferred
+host occurs. We at IBIS have gone through the following host changes:
+
+* biodiversity.org.au
+* biodiversity.org.au/boa
+* www.anbg.gov.au - original
+* *id.biodiversity.org.au* - currently preferred
+
+The change in host can happen for many reasons, and once a host is published in a URL we need to maintain it if possible.
+Hosts are linked to specific Matches because the reverse proxy may only be able to resolve certain patterns. For example
+the old link for Doodia R.Br. `https://biodiversity.org.au/apni.name/16512` uses the biodiversity.org.au host and works
+because the reverse proxy can match the `apni.name` pattern.
+
+A Match can have many hosts. When the mapper is asked for all the links to a resource it will mark the preferred link in
+the list.
+
+
+[source, JSON]
+./api/links/name/apni/70914
+----
+[
+  {
+    "link": "http://biodiversity.org.au/boa/name/apni/70914",
+    "resourceCount": 1,
+    "preferred": false,
+    "deprecated": false,
+    "deleted": false
+  },
+  {
+    "link": "http://localhost:7070/nsl-mapper/name/apni/70914",
+    "resourceCount": 1,
+    "preferred": false,
+    "deprecated": false,
+    "deleted": false
+  },
+  {
+    "link": "http://localhost:7070/nsl-mapper/70914",
+    "resourceCount": 1,
+    "preferred": false,
+    "deprecated": false,
+    "deleted": false
+  },
+  {
+    "link": "http://www.anbg.gov.au/cgi-bin/apni?taxon_id=16512",
+    "resourceCount": 1,
+    "preferred": false,
+    "deprecated": true,
+    "deleted": false
+  },
+  {
+    "link": "http://biodiversity.org.au/apni.name/16512",
+    "resourceCount": 1,
+    "preferred": false,
+    "deprecated": false,
+    "deleted": false
+  },
+  {
+    "link": "http://localhost:7070/nsl-mapper/Doodia R.Br.",
+    "resourceCount": 15,
+    "preferred": false,
+    "deprecated": false,
+    "deleted": false
+  }
+]
+----
+
+Here is the data structure of the mapper Database.
+
 .Data structure
 image::mapper.png[]
+
+=== The Broker
+
