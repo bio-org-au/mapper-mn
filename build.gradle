@@ -23,6 +23,7 @@ dependencies {
     annotationProcessor "io.micronaut:micronaut-inject-java"
     annotationProcessor "io.micronaut:micronaut-validation"
     annotationProcessor "io.micronaut:micronaut-security"
+    compileOnly "io.micronaut.configuration:micronaut-openapi"
     compileOnly platform("io.micronaut:micronaut-bom:$micronautVersion")
     compileOnly "io.micronaut:micronaut-inject-groovy"
     implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
@@ -30,6 +31,7 @@ dependencies {
     implementation "io.micronaut:micronaut-validation"
     implementation "io.micronaut:micronaut-http-server-netty"
     implementation "io.micronaut:micronaut-http-client"
+    implementation "io.swagger.core.v3:swagger-annotations"
     runtimeOnly "ch.qos.logback:logback-classic:1.2.3"
 
     compile "io.micronaut:micronaut-security-jwt"

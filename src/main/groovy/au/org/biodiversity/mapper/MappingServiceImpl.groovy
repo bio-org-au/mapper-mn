@@ -142,8 +142,8 @@ class MappingServiceImpl implements MappingService {
      * @param idNumber
      * @return a List of Maps containing [link, resourceCount, preferred, deprecated, deleted]
      */
-    List<Map> getlinks(String nameSpace, String objectType, long idNumber) {
-        List<Map> links = []
+    List<LinkResult> getlinks(String nameSpace, String objectType, long idNumber) {
+        List<LinkResult> links = []
         withSql { Sql sql ->
             sql.eachRow('''
             select host.host_name || '/' || m.uri as link,
@@ -159,12 +159,7 @@ class MappingServiceImpl implements MappingService {
             where name_space = :nameSpace and object_type = :objectType and id_number = :idNumber
             order by preferred desc, resourceCount''',
                     [nameSpace: nameSpace, objectType: objectType, idNumber: idNumber]) { GroovyResultSet row ->
-                links.add([link         : "${defaultProtocol}://${row['link']}".toString(),
-                           resourceCount: row['resourceCount'],
-                           preferred    : row['preferred'],
-                           deprecated   : row['deprecated'],
-                           deleted      : row['deleted']
-                ])
+                links.add(new LinkResult(row, defaultProtocol))
             }
         }
         return links

@@ -59,6 +59,38 @@ mapper:
   urlRegex: ^(https?://[^/]*)?/?(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
 ----
 
+The application.yml defines the default datasource and this can be compiled in or changed the the external groovy
+configuration file.
+
+[source, yaml]
+.application.yml
+----
+
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/nsl
+    username: nsl
+    password: nsl-s33kr1t
+    driverClassName: org.postgresql.Driver
+    autoCommit: false
+    schema: mapper
+    socketTimeout: 30
+----
+
+you probably only want to override the url and username/password in the external config, e.g.
+
+[source, groovy]
+.nsl-mapper-config-mn.groovy
+----
+datasources  {
+    'default' {
+        url = 'jdbc:postgresql://localhost:5432/nsl'
+        username = 'nsl'
+        password = 'v3ryS3cr3t'
+    }
+}
+----
+
 === Configure mapping
 
 An external configuration file is used to configure the resource service to map a URL to.
@@ -69,9 +101,8 @@ An external configuration file is used to configure the resource service to map 
 import au.org.biodiversity.mapper.Identifier
 
 mapper {
-    resolverURL = 'http://localhost:7070/nsl-mapper'
-    contextExtension = '' //extension to the context path (after nsl-mapper).
-    defaultProtocol = 'http'
+    resolverURL = 'http://localhost:7070/nsl-mapper'   //<1>
+    defaultProtocol = 'http'                           //<2>
     Map serviceHosts = [
             bpni: 'http://bpni.com',
             apni: 'http://apni.com/nsl',
@@ -81,7 +112,7 @@ mapper {
             foa : 'http://test.biodiversity.org.au/'
     ]
 
-    Closure htmlResolver = { Identifier ident ->
+    Closure htmlResolver = { Identifier ident ->       //<3>
         String host = serviceHosts[ident.nameSpace]
         if (ident.objectType == 'treeElement') {
             return "${host}/services/rest/${ident.objectType}/${ident.versionNumber}/${ident.idNumber}"
@@ -97,14 +128,14 @@ mapper {
         return "${host}/services/json/${ident.objectType}/${ident.nameSpace}/${ident.idNumber}"
     }
 
-    format {
+    format {                                            //<4>
         html = htmlResolver
         json = jsonResolver
         xml = htmlResolver
         rdf = {Identifier ident -> return null}
     }
 
-    auth = [
+    auth = [                                            //<5>
             'TEST-services': [
                     secret: 'buy-me-a-pony',
                     application: 'services',
@@ -118,6 +149,16 @@ mapper {
     ]
 }
 ----
+
+1. the URL to reach the mapper from the internet e.g. https://id.biodiversity.org.au
+2. the protocol to use when connecting to a host, e.g. https to stop being redirected to the secure endpoint then
+redirected to the service
+3. A Groovy Closure to resolve a request for a html resource. This is just plain old Groovy used in the format section.
+4. The mapping of formats to a Closure that can do the work. The closure will be called with the Identifier as it's argument
+and you provide a URL to redirect to to get the resource. Returning null will cause a `404 Not Found` to be returned.
+5. Authentication list mapped by the service username. Only 'admin' role is currently supported.
+
+NOTE: Only HTML, JSON, XML and RDF content types are supported in this version of the mapper. See the `ContentNegService`.
 
 == How it works
 
@@ -168,13 +209,19 @@ the old link for Doodia R.Br. `https://biodiversity.org.au/apni.name/16512` uses
 because the reverse proxy can match the `apni.name` pattern.
 
 A Match can have many hosts. When the mapper is asked for all the links to a resource it will mark the preferred link in
-the list.
-
+the list (see 1 below).
 
 [source, JSON]
 ./api/links/name/apni/70914
 ----
 [
+  {
+    "link": "http://id.biodiversity.org.au/name/apni/70914",
+    "resourceCount": 1,
+    "preferred": true,         //<1>
+    "deprecated": false,
+    "deleted": false
+  },
   {
     "link": "http://biodiversity.org.au/boa/name/apni/70914",
     "resourceCount": 1,
@@ -183,14 +230,7 @@ the list.
     "deleted": false
   },
   {
-    "link": "http://localhost:7070/nsl-mapper/name/apni/70914",
-    "resourceCount": 1,
-    "preferred": false,
-    "deprecated": false,
-    "deleted": false
-  },
-  {
-    "link": "http://localhost:7070/nsl-mapper/70914",
+    "link": "http://id.biodiversity.org.au/70914",
     "resourceCount": 1,
     "preferred": false,
     "deprecated": false,
@@ -211,7 +251,7 @@ the list.
     "deleted": false
   },
   {
-    "link": "http://localhost:7070/nsl-mapper/Doodia R.Br.",
+    "link": "http://id.biodiversity.org.au/Doodia R.Br.",
     "resourceCount": 15,
     "preferred": false,
     "deprecated": false,
@@ -227,3 +267,519 @@ image::mapper.png[]
 
 === The Broker
 
+The brokers job is to redirect you to a service that can give you the resource you want. It does that using a `303 redirect`
+called a `See Other`. If you ask for a _deprecated_ URI, one that we don't want you to use anymore, you will get a
+`Moved Permanently` or `301 redirect`. In theory a service seeing a 301 redirect will update it's link to the new link
+then request that one in the future. People hitting that link in the browser won't notice, they'll just get the resource.
+
+The broker uses the configuration file to work out how to redirect to a service that will serve the resource. See the
+<<Configure mapping>> section for a description of configuring the mapping from an Identifier to a service based on format.
+
+== API
+
+See link:/swagger-ui/index.html[swagger-ui/index.hml]
+
+The API provides information and administration endpoints. To change information you need to be authenticated. The
+Authentication is done via a JSON call to the /api/login endpoint with the username and password of the service calling
+the API. A JSON Web Token (see https://jwt.io/) is returned and must be presented as a Bearer Token in the Authorization
+header. See the ApiControllerSpec for examples of how to do this using Micronaut:
+
+[source, groovy]
+.auth.groovy
+----
+    private String login() {
+        HttpRequest request = POST('/login', '{"username":"TEST-services","password":"buy-me-a-pony"}')
+        HttpResponse<BearerAccessRefreshToken> rsp = client.toBlocking().exchange(request, BearerAccessRefreshToken)
+        assert rsp.status == HttpStatus.OK
+        return rsp.body().accessToken
+    }
+
+    private Map httpPostCallMap(String uri, Map body, String accessToken) {
+        Flowable<HttpResponse<Map>> call = client.exchange(
+                POST(uri, body)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                , Map.class
+        )
+        return call.blockingFirst().body()
+    }
+----
+
+Login in using curl:
+[source,shell script]
+.cli.sh
+----
+> curl -i -v "http://localhost:8080/api/login" -H 'Content-Type: application/json'  -d $'{"username":"TEST-services","password":"buy-me-a-pony"}'
+...
+{"username":"TEST-services","roles":["admin"],"access_token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJURVNULXNlcnZpY2VzIiwibmJmIjoxNTY5MjEyMDMxLCJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJtYXBwZXItbW4iLCJleHAiOjE1NjkyMTU2MzEsImlhdCI6MTU2OTIxMjAzMX0.ctLAxA0Jsb_HfKY7M3JaUSwscPDb2iBGfz-TsjE7XQk","refresh_token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJURVNULXNlcnZpY2VzIiwibmJmIjoxNTY5MjEyMDMxLCJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJtYXBwZXItbW4iLCJpYXQiOjE1NjkyMTIwMzF9.9xP_JmTFG120M_fbiAKwTOE7YTjTpxwK3tOtO0UMKaM","token_type":"Bearer","expires_in":3600}
+----
+
+Once you have the JWToken you pass it in the Authorization header as `Authorization: Bearer eyJhblahblahblah...` when you
+make a request.
+
+The above token will time out after 3600 seconds, you can refresh the token using the refresh token. The refresh token is
+not changed, so save it in a safe place. Have a look in ApiControllerSpec "test auth" test to see how to refresh
+your token.
+
+=== PUT /add-host
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Put("/add-host")
+
+Add a new Host to the mapper. You need to be authenticated to call this.
+
+PUT request to /add-host with JSON body containing hostname.
+[source, JSON]
+./add-host
+----
+{
+    "hostName": "mcneils.net"
+}
+----
+
+=== PUT /add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}
+* Deprecated
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Put("/add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
+
+Add a new identifier to the mapper with optional uri. A default URI is made if none is supplied.
+The Version Number is optional.
+
+----
+Sending HTTP Request: PUT /api/add-identifier?nameSpace=electronics&idNumber=555&objectType=timer
+Authorization: Bearer eyJh...
+content-type: application/json
+content-length: 2
+Request Body
+{}
+----
+
+----
+Response:
+content-type: text/json
+Response Body
+{
+  "identifier": {
+    "id": 21,
+    "nameSpace": "electronics",
+    "objectType": "timer",
+    "idNumber": 555,
+    "deleted": false,
+    "updatedAt": 1569212311999,
+    "updatedBy": "TEST-services"
+  },
+  "uri": "timer/electronics/555"
+}
+----
+
+=== PUT /add/{objectType}/{nameSpace}/{idNumber}
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Put("/add/{objectType}/{nameSpace}/{idNumber}")
+
+Add a non versioned Identifier with the default URI, or supply the uri in the body
+
+----
+Sending HTTP Request: PUT /api/add/timer/electronics/555
+Authorization: Bearer eyJh....
+content-type: application/json
+Request Body
+{"uri":"dual-timer/556"}
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{
+  "identifier": {
+    "id": 21,
+    "nameSpace": "electronics",
+    "objectType": "timer",
+    "idNumber": 555,
+    "deleted": false,
+    "updatedAt": 1569212311999,
+    "updatedBy": "TEST-services"
+  },
+  "uri": "timer/electronics/555"
+}
+----
+
+=== PUT /add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Put("/add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}")
+
+Add a versioned Identifier with default URI, or specify the uri in the JSON body.
+
+----
+Sending HTTP Request: PUT /api/add/apni/treeElement/222/111
+Authorization: Bearer eyJhbG...
+content-type: application/json
+Request Body
+{}
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{
+  "identifier": {
+    "id": 25,
+    "nameSpace": "apni",
+    "objectType": "treeElement",
+    "idNumber": 111,
+    "versionNumber": 222,
+    "deleted": false,
+    "updatedAt": 1569212312153,
+    "updatedBy": "TEST-services"
+  },
+  "uri": "treeElement/222/111"
+}
+----
+
+=== PUT /add-uri-to-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}{?preferred}
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Put("/add-uri-to-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}{?preferred}")
+
+Adds a new or existing uri to an existing Identifier as specified by the query parameters.
+
+Sending HTTP Request: PUT /api/add-uri-to-identifier?nameSpace=apni&idNumber=54433&uri=54433%2Fapni%2Fname&objectType=name
+Authorization: Bearer eyJhbG...
+content-type: application/json
+Request Body
+----
+{}
+----
+
+Status Code: 200 OK
+content-type: text/json
+Response Body
+----
+{
+  "success": true,
+  "message": "uri added to identity",
+  "match": {
+    "id": 72109,
+    "uri": "54433/apni/name",
+    "deprecated": false,
+    "updatedAt": 1569212332076,
+    "updatedBy": "TEST-services"
+  },
+  "identifier": {
+    "id": 10,
+    "nameSpace": "apni",
+    "objectType": "name",
+    "idNumber": 54433,
+    "deleted": false,
+    "updatedAt": 1568002341950,
+    "updatedBy": "pmcneil"
+  }
+}
+----
+
+=== POST /bulk-add-identifiers
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Post("/bulk-add-identifiers")
+
+Adds multiple identifiers and the preferred URI. The body of the post is a JSON object containing a list of identifier
+objects that look like this:
+
+[source, json]
+.identifier.json
+----
+{
+  "s": "apni",                        //nameSpace
+  "o": "treeElement",                 //object type
+  "i": 51215341,                      //id number
+  "v": 51313427,                      //version number
+  "u": "tree/51313427/51215341"       //uri
+}
+----
+
+----
+Sending HTTP Request: POST /api/bulk-add-identifiers
+Authorization: Bearer eyJhbG...
+content-type: application/json
+content-length: 3099457
+Request Body
+{"identifiers":[{"s":"apni","o":"treeElement","i":51215341,"v":51313427,"u":"tree/51313427/51215341"},...]}
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{"success":true,"message":"36040 identities added."}
+----
+
+=== POST /bulk-remove-identifiers
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Post("/bulk-remove-identifiers")
+
+Removes multiple Identifiers as specified in the JSON body. The body of the post is a JSON object containing a list of identifier
+objects that look like this:
+
+[source, json]
+.identifier.json
+----
+{
+  "s": "apni",                        //nameSpace
+  "o": "treeElement",                 //object type
+  "i": 51215341,                      //id number
+  "v": 51313427                       //version number
+}
+----
+
+----
+Sending HTTP Request: POST /api/bulk-remove-identifiers
+Authorization: Bearer eyJhbG...
+content-type: application/json
+content-length: 3099457
+Request Body
+{"identifiers":[{"s":"apni","o":"treeElement","i":51215341,"v":51313427,"u":"tree/51313427/51215341"},...]}
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{"success":true,"message":"36040 identities removed."}
+----
+=== GET /current-identity{?uri}
+* PermitAll
+* Produces(MediaType.TEXT_JSON)
+* Get("/current-identity{?uri}")
+
+Gets the current identity associated with this URL
+
+----
+Sending HTTP Request: GET /api/current-identity?uri=http%3A%2F%2Flocalhost%3A8080%2Fname%2Fapni%2F54433
+
+Status Code: 200 OK
+content-type: text/json
+Response Body
+[
+  {
+    "id": 10,
+    "nameSpace": "apni",
+    "objectType": "name",
+    "idNumber": 54433,
+    "versionNumber": 0,
+    "deleted": false,
+    "updatedAt": 1568002341950,
+    "updatedBy": "pmcneil"
+  }
+]
+----
+
+=== Delete /delete-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?reason}
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Delete("/delete-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?reason}")
+
+----
+Sending HTTP Request: DELETE /api/delete-identifier?reason=just+for+kicks&nameSpace=animals&idNumber=1&objectType=rat
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJURVNULXNlcnZpY2VzIiwibmJmIjoxNTY5Mjg2ODE4LCJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJtYXBwZXItbW4iLCJleHAiOjE1NjkyOTA0MTgsImlhdCI6MTU2OTI4NjgxOH0.WrfFn8K6xBuC6fh0maY8CxySJShKlv4rscXHdMzi9bo
+content-type: application/json
+Request Body
+{}
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{"success":true,"message":"Deleted Identifier.","identifier":{"id":72118,"nameSpace":"animals","objectType":"rat","idNumber":1,"deleted":true,"reasonDeleted":"just for kicks","updatedAt":1569286818762,"updatedBy":"fred"}}
+----
+
+=== GET /links/{objectType}/{nameSpace}/{idNumber}
+* PermitAll
+* Produces(MediaType.TEXT_JSON)
+* Get("/links/{objectType}/{nameSpace}/{idNumber}")
+
+----
+Sending HTTP Request: GET /api/links/name/apni/54433
+Authorization: Bearer null
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+[
+  {
+    "link": "http://localhost:8080/name/apni/54433",
+    "resourceCount": 1,
+    "preferred": true,
+    "deprecated": false,
+    "deleted": false
+  },
+  {
+    "link": "http://localhost:8080/cgi-bin/apni?taxon_id=230687",
+    "resourceCount": 1,
+    "preferred": false,
+    "deprecated": true,
+    "deleted": false
+  }
+]
+----
+
+=== POST /move-identity
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Post("/move-identity")
+
+----
+Sending HTTP Request: POST /api/move-identity
+Authorization: Bearer eyJhbG...
+content-type: application/json
+Request Body
+{
+  "fromNameSpace": "animals",
+  "fromObjectType": "dog",
+  "fromIdNumber": 24,
+  "toNameSpace": "animals",
+  "toObjectType": "dog",
+  "toIdNumber": 23
+}
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{
+  "success": true,
+  "message": "Identities moved.",
+  "from": {
+    "id": 72113,
+    "nameSpace": "animals",
+    "objectType": "dog",
+    "idNumber": 24,
+    "deleted": false,
+    "updatedAt": 1569286818517,
+    "updatedBy": "TEST-services"
+  },
+  "to": {
+    "id": 72111,
+    "nameSpace": "animals",
+    "objectType": "dog",
+    "idNumber": 23,
+    "deleted": false,
+    "updatedAt": 1569286818487,
+    "updatedBy": "TEST-services"
+  }
+}
+----
+
+=== PUT /set-preferred-host
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Put("/set-preferred-host")
+
+----
+Sending HTTP Request: GET /api/preferred-host
+Authorization: Bearer null
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{"host":"http://localhost:8080"}
+----
+
+=== GET /preferred-link/{objectType}/{nameSpace}/{idNumber}
+* PermitAll
+* Produces(MediaType.TEXT_JSON)
+* Get("/preferred-link/{objectType}/{nameSpace}/{idNumber}")
+
+----
+Sending HTTP Request: GET /api/preferred-link/name/apni/54433
+Authorization: Bearer null
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{"link":"http://localhost:8080/name/apni/54433"}
+----
+
+=== Delete /remove-identifier-from-uri{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Delete("/remove-identifier-from-uri{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
+
+----
+Sending HTTP Request: DELETE /api/remove-identifier-from-uri?nameSpace=animals&idNumber=1&uri=doggies%2F1&objectType=dog
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJURVNULXNlcnZpY2VzIiwibmJmIjoxNTY5Mjg2ODE4LCJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJtYXBwZXItbW4iLCJleHAiOjE1NjkyOTA0MTgsImlhdCI6MTU2OTI4NjgxOH0.WrfFn8K6xBuC6fh0maY8CxySJShKlv4rscXHdMzi9bo
+content-type: application/json
+Request Body
+{}
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{
+  "success": true,
+  "message": "Identifier removed from URI.",
+  "identifier": {
+    "id": 72115,
+    "nameSpace": "animals",
+    "objectType": "dog",
+    "idNumber": 1,
+    "deleted": false,
+    "updatedAt": 1569286818633,
+    "updatedBy": "fred"
+  }
+}
+----
+
+=== Put /set-preferred-host
+* RolesAllowed('admin')
+* Produces(MediaType.TEXT_JSON)
+* Put("/set-preferred-host")
+
+----
+Sending HTTP Request: PUT /api/set-preferred-host
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJURVNULXNlcnZpY2VzIiwibmJmIjoxNTY5Mjg2Nzk4LCJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJtYXBwZXItbW4iLCJleHAiOjE1NjkyOTAzOTgsImlhdCI6MTU2OTI4Njc5OH0.qhoVUrEIO2Gx_BaOnOaHKlOZ2WemLG7Tufbt14n8RUU
+content-type: application/json
+Request Body
+{"hostName":"mcneils.net"}
+----
+
+----
+Status Code: 200 OK
+content-type: text/json
+Response Body
+{
+  "host": {
+    "id": 28,
+    "hostName": "mcneils.net",
+    "preferred": true
+  }
+}
+----
+
+=== GET /stats
+* PermitAll
+* Produces(MediaType.TEXT_JSON)
+* Get("/stats")
+
+----
+{
+  "identifiers": 17546853,
+  "matches": 19594817,
+  "hosts": 4,
+  "orphanMatch": 612,
+  "orphanIdentifier": 0
+}
+----

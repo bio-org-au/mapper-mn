@@ -74,7 +74,7 @@ interface MappingService {
      * @param idNumber
      * @return A list of maps of link data
      */
-    List<Map> getlinks(String nameSpace, String objectType, long idNumber)
+    List<LinkResult> getlinks(String nameSpace, String objectType, long idNumber)
 
     /**
      * Add a new Identifier with the given link or a default link
@@ -146,15 +146,57 @@ interface MappingService {
      */
     Match addMatch(String uri, String username)
 
+    /**
+     * Returns a list of statistics about the mapper database
+     * [ "identifiers": 17546853,
+     *   "matches": 19594817,
+     *   "hosts": 4,
+     *   "orphanMatch": 612,
+     *   "orphanIdentifier": 0]
+     *
+     * @return a map of stats
+     */
     Map stats()
 
+    /**
+     * Move URI's from one Identifier to another Identifier
+     * @param from
+     * @param to
+     * @return Boolean success
+     */
     Boolean moveUris(Identifier from, Identifier to)
 
+    /**
+     * removes the Identifier from the the URI
+     * @param match
+     * @param identifier
+     * @return Boolean success
+     */
     Boolean removeIdentityFromUri(Match match, Identifier identifier)
 
+    /**
+     * Get the host for a given Match
+     * @param match
+     * @return Host
+     */
     Host getHost(Match match)
 
+    /**
+     * Get an identifier by it's mapper id
+     * @param id
+     * @return Identifier
+     */
     Identifier getIdentifier(Long id)
 
+    /**
+     * Set an Identifier as deleted. If URIs of this identifier are used in future they will get a HTTP GONE.
+     * You must provide a reason to be supplied with the gone response.
+     *
+     * This doesn't actually remove the identifier, it just marks it as deleted.
+     *
+     * @param identifier
+     * @param reason
+     * @return Identifier
+     */
     Identifier deleteIdentifier(Identifier identifier, String reason)
 }

@@ -27,6 +27,16 @@ class ApiController {
     @Property(name = 'mapper.url-regex')
     String matchRegex
 
+    /**
+     * Get the preferred host. This returns the host sans protocol e.g. localhost:8080
+     *
+     * http://.../api/preferred-host
+     * <pre>
+     * {
+     *   "host": "http://id.biodiversity.org.au"
+     * }</pre>
+     * @return Map {"host": "String"}
+     */
     @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Get("/preferred-host")
@@ -38,6 +48,20 @@ class ApiController {
         return null
     }
 
+    /**
+     * get the preferred link for an identifier by object type, namespace and id number
+     *
+     * http://.../api/preferred-link/name/apni/70914
+     *<pre>
+     *  {
+     *    "link": "http://biodiversity.org.au/boa/name/apni/70914"
+     *  }</pre>
+     *
+     * @param nameSpace
+     * @param objectType
+     * @param idNumber
+     * @return Map {"link": "String"}
+     */
     @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Get("/preferred-link/{objectType}/{nameSpace}/{idNumber}")
@@ -49,14 +73,60 @@ class ApiController {
         return null
     }
 
+    /**
+     * Get all the links for an Identifier by namespace, object type and id number
+     *
+     * e.g. http://.../api/links/name/apni/70914
+     * <pre>
+     * [
+     *   {
+     *     "link": "http://id.biodiversity.org.au/name/apni/70914",
+     *     "resourceCount": 1,
+     *     "preferred": true,
+     *     "deprecated": false,
+     *     "deleted": false
+     *   },
+     *   {
+     *     "link": "http://biodiversity.org.au/boa/name/apni/70914",
+     *     "resourceCount": 1,
+     *     "preferred": false,
+     *     "deprecated": false,
+     *     "deleted": false
+     *   }
+     * ]</pre>
+     * @param nameSpace
+     * @param objectType
+     * @param idNumber
+     * @return JSON List of map
+     */
     @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Get("/links/{objectType}/{nameSpace}/{idNumber}")
-    List<Map> links(@PathVariable String nameSpace, @PathVariable String objectType, @PathVariable Long idNumber) {
-        List<Map> links = mappingService.getlinks(nameSpace, objectType, idNumber)
+    List<LinkResult> links(@PathVariable String nameSpace, @PathVariable String objectType, @PathVariable Long idNumber) {
+        List<LinkResult> links = mappingService.getlinks(nameSpace, objectType, idNumber)
         return links.empty ? null : links
     }
 
+    /**
+     * Get the current identity for a URI
+     *
+     * e.g. http://.../api/current-identity/?uri=http://id.biodiversity.org.au/name/apni/54433
+     * <pre>
+     * [
+     *   {
+     *     "id": 9,
+     *     "nameSpace": "apni",
+     *     "objectType": "name",
+     *     "idNumber": 54433,
+     *     "versionNumber": 0,
+     *     "deleted": false,
+     *     "updatedAt": 1450325464774
+     *   }
+     * ]</pre>
+     *
+     * @param uri a uri including the host to get the current identifier for.
+     * @return a List of @see au.org.biodiversity.mapper.Identifier
+     */
     @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Get("/current-identity{?uri}")
@@ -68,6 +138,20 @@ class ApiController {
         return links
     }
 
+    /**
+     * Get some stats on the mapper. This takes some time. e.g.
+     * http://.../api/stats
+     *
+     * <pre>
+     * {
+     *   "identifiers": 17546853,
+     *   "matches": 19594817,
+     *   "hosts": 4,
+     *   "orphanMatch": 612,
+     *   "orphanIdentifier": 0
+     * }</pre>
+     * @return a map of stats
+     */
     @PermitAll
     @Produces(MediaType.TEXT_JSON)
     @Get("/stats")

@@ -1,0 +1,164 @@
+= Mapper
+v2.0, September 2019
+:toc: left
+:toclevels: 4
+:toc-class: toc2
+:icons: font
+:imagesdir: resources/images/
+:stylesdir: resources/style/
+:stylesheet: asciidoctor.css
+:description: Mapper documentation
+:keywords: documentation, Grails, Mapper, NSL, V2.0, micronaut
+:links:
+:numbered:
+:sectlinks:
+
+== Introduction
+
+The *Mapper* maps URI *identifiers* to *resources* based on content negotiation. It is the place an ID is created and
+mapped to a resource.
+
+From that point on the mapped URI becomes a *permalink* that will always resolve.
+
+The mapper manages de-duplication of resources by allowing you to move a mapping from one resource identifier to
+another. It also manages deletion of resources allowing you to provide a reason for deleting a resource, which is
+returned with a 410 GONE http response.
+
+You can map a URI to different servers based on the content type requested, e.g. JSON, XML, RDF, HTML.
+
+For info on how it works, data structure and API see: link:doc/guide.adoc[]
+
+=== License
+
+This software is copyright (c) 2019 Australian National Botanic Gardens
+
+This file is part of National Species List project.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not
+    use this file except in compliance with the License. You may obtain a copy
+    of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+See: link:LICENSE.adoc[]
+
+== Quick start
+
+link:https://sdkman.io/[SDK Man] is your friend for installing SDKs including Java, Grails etc.
+
+=== Java
+
+You need Java 8 installed and on your PATH. Type `java -version` from the command line to check. You should
+get something like:
+
+----
+openjdk version "1.8.0_222"
+OpenJDK Runtime Environment (build 1.8.0_222-b10)
+OpenJDK 64-Bit Server VM (build 25.222-b10, mixed mode)
+----
+
+If you need to install one try (YMMV):
+
+`sdk install java 8.0.222-adpt`
+
+=== Database
+
+1. Install postgresql
+2. Create a super user called "nsl" with the password "nsl": `created user -s nsl`
+3. edit pg_hba.conf so that local interfaces can talk to postgresql with a password:
+
+[source]
+.pg_hba.conf
+----
+...
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+...
+# IPv4 local connections:
+host    all             all             192.168.0.0/24          md5 #<1>
+host    all             all             127.0.0.1/24            md5
+...
+----
+
+<1> md5 is a hashed password authentication over TCP
+
+If you don't have a mapper schema, you can need to create the schema. Get the `test/resource/ddl.sql` from the GitHub
+repository and run:
+
+`dropdb --if-exists nsl && createdb nsl && psql -f ddl.sql nsl`
+
+WARNING: Don't drop the nsl database if it has data you want to keep in it! You could just drop the mapper schema.
+
+TIP: You can call your DB something else if you like, just change references to it
+
+=== Config
+
+Make a local configuration file called `nsl-mapper-config-mn.groovy` and put it in a directory like `~/.nsl/ (see the docs/guide.adoc).
+
+This is a basic config that will get you running assuming you have a local database called "nsl" with a user called "nsl" and
+password "nsl".
+
+[source]
+.nsl-mapper-config-mn.groovy
+----
+import au.org.biodiversity.mapper.Identifier
+
+mapper {
+    resolverURL = 'http://localhost:8080/nsl-mapper'         //<1>
+    defaultProtocol = 'http'
+
+    Closure defaultResolver = { Identifier ident ->
+        Map serviceHosts = [
+                apni: 'https://localhost:8090/nsl'           //<2>
+        ]
+        String host = serviceHosts[ident.nameSpace]
+        if (ident.objectType == 'treeElement') {
+            return "${host}/services/rest/${ident.objectType}/${ident.versionNumber}/${ident.idNumber}"
+        }
+        return "${host}/services/rest/${ident.objectType}/${ident.nameSpace}/${ident.idNumber}"
+    }
+
+    format {
+        html = defaultResolver
+        json = defaultResolver
+        xml = defaultResolver
+        rdf = {Identifier ident -> return null}
+    }
+
+    auth = [
+            'TEST-services': [
+                    secret: 'buy-me-a-pony',
+                    application: 'services',
+                    roles      : ['admin'],
+            ],
+            'TEST-editor': [
+                    secret: 'I-am-a-pony',
+                    application: 'editor',
+                    roles      : ['admin'],
+            ]
+    ]
+}
+----
+
+=== Docker
+
+* `docker run -p 8080:8080 -v $HOME/.nsl:/etc/nsl:ro pmcneil/nsl-mapper:2.0`
+
+=== Development
+
+1. make sure you have a database, java and config
+2. clone this repository somewhere
+3. cd to project directory
+4. execute `./gradlew run` from the command line
+5. browse to localhost:8080/ to see mapper page
+
+to stop just press CTRL-C.
+
+See: link:doc/guide.adoc[]
+
+==== Testing
+
+run `./gradlew test` after which the test reports will be in `build/reports/test`
