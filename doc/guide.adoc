@@ -13,7 +13,7 @@ v2.0, September 2019
 :numbered:
 :sectlinks:
 
-Mapper moved to Micronaut framework.
+Mapper moved to link:https://docs.micronaut.io/latest/guide/index.html[Micronaut framework.]
 
 == Introduction
 
@@ -101,9 +101,9 @@ An external configuration file is used to configure the resource service to map 
 import au.org.biodiversity.mapper.Identifier
 
 mapper {
-    resolverURL = 'http://localhost:7070/nsl-mapper'   //<1>
+    resolverURL = 'http://localhost:8080/mapper'       //<1>
     defaultProtocol = 'http'                           //<2>
-    Map serviceHosts = [
+    Map serviceHosts = [                               //<3>
             bpni: 'http://bpni.com',
             apni: 'http://apni.com/nsl',
             ausmoss: 'http://ausmoss.com/nsl',
@@ -112,7 +112,7 @@ mapper {
             foa : 'http://test.biodiversity.org.au/'
     ]
 
-    Closure htmlResolver = { Identifier ident ->       //<3>
+    Closure htmlResolver = { Identifier ident ->       //<4>
         String host = serviceHosts[ident.nameSpace]
         if (ident.objectType == 'treeElement') {
             return "${host}/services/rest/${ident.objectType}/${ident.versionNumber}/${ident.idNumber}"
@@ -128,14 +128,14 @@ mapper {
         return "${host}/services/json/${ident.objectType}/${ident.nameSpace}/${ident.idNumber}"
     }
 
-    format {                                            //<4>
+    format {                                            //<5>
         html = htmlResolver
         json = jsonResolver
         xml = htmlResolver
         rdf = {Identifier ident -> return null}
     }
 
-    auth = [                                            //<5>
+    auth = [                                            //<6>
             'TEST-services': [
                     secret: 'buy-me-a-pony',
                     application: 'services',
@@ -147,16 +147,24 @@ mapper {
                     roles      : ['admin'],
             ]
     ]
+
+    db {                                                //<7>
+        url = 'jdbc:postgresql://localhost:5432/nsl'
+        username = 'nsl'
+        password = 'nsl'
+    }
 }
 ----
 
 1. the URL to reach the mapper from the internet e.g. https://id.biodiversity.org.au
 2. the protocol to use when connecting to a host, e.g. https to stop being redirected to the secure endpoint then
 redirected to the service
-3. A Groovy Closure to resolve a request for a html resource. This is just plain old Groovy used in the format section.
-4. The mapping of formats to a Closure that can do the work. The closure will be called with the Identifier as it's argument
+3. using a locally defined Map of hosts to simplify things. i.e. you can use plain old groovy code
+4. A Groovy Closure to resolve a request for a html resource. This is just plain old Groovy used in the format section.
+5. The mapping of formats to a Closure that can do the work. The closure will be called with the Identifier as it's argument
 and you provide a URL to redirect to to get the resource. Returning null will cause a `404 Not Found` to be returned.
-5. Authentication list mapped by the service username. Only 'admin' role is currently supported.
+6. Authentication list mapped by the service username. Only 'admin' role is currently supported.
+7. set the database connection details here
 
 NOTE: Only HTML, JSON, XML and RDF content types are supported in this version of the mapper. See the `ContentNegService`.
 
@@ -277,7 +285,8 @@ The broker uses the configuration file to work out how to redirect to a service 
 
 == API
 
-See link:/swagger-ui/index.html[swagger-ui/index.hml]
+TIP: The API is available via link:/swagger-ui/index.html[swagger-ui/index.hml] as testable documentation. Unfortunately
+that won't work if you're reading this on GitHub. I'll update with a more permanent documentation site soon.
 
 The API provides information and administration endpoints. To change information you need to be authenticated. The
 Authentication is done via a JSON call to the /api/login endpoint with the username and password of the service calling

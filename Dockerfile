@@ -1,4 +1,6 @@
-FROM adoptopenjdk/openjdk11-openj9:jdk-11.0.1.13-alpine-slim
+FROM openjdk:8u171-alpine3.7
 COPY build/libs/mapper-mn-*-all.jar mapper-mn.jar
 EXPOSE 8080
-CMD java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dcom.sun.management.jmxremote -noverify ${JAVA_OPTS} -jar mapper-mn.jar -Dmicronaut.config.files=/etc/nsl-mapper-config-mn.groovy
+CMD java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dcom.sun.management.jmxremote -noverify ${JAVA_OPTS} \
+-Dmicronaut.config.files=/etc/nsl/nsl-mapper-config-mn.groovy \
+-jar mapper-mn.jar

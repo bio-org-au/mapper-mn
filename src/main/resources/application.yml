@@ -33,9 +33,9 @@ micronaut:
 ---
 datasources:
   default:
-    url: jdbc:postgresql://localhost:5432/nsl
-    username: nsl
-    password: nsl
+    url: ${mapper.db.url:`jdbc:postgresql://localhost:5432/nsl`}
+    username: ${mapper.db.username:nsl}
+    password: ${mapper.db.password:nsl}
     driverClassName: org.postgresql.Driver
     autoCommit: false
     schema: mapper

@@ -15,6 +15,7 @@
 */
 package au.org.biodiversity.mapper
 
+import io.micronaut.context.annotation.Property
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.Controller
@@ -22,6 +23,8 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Produces
 
 import javax.annotation.security.PermitAll
+import javax.inject.Inject
+import javax.sql.DataSource
 
 /**
  * User: pmcneil
@@ -30,11 +33,18 @@ import javax.annotation.security.PermitAll
  */
 @Controller('/')
 class IndexController {
+
+    @Inject
+    DataSource dataSource
+
+    @Property(name = "micronaut.config.files")
+    String configFiles
+
     @PermitAll
     @Produces(MediaType.TEXT_HTML)
     @Get("/")
     HttpResponse index() {
-        HttpResponse.ok('''<html><body>
+        HttpResponse.ok("""<html><body>
 <h1>Mapper</h1>
 <p>
 This is the mapper. It redirects you to resources. If you were using a resolvable URL then you should have been redirected,
@@ -42,6 +52,8 @@ and we have a configuration problem. (all resolvable URLs should be pointed at /
 </p>
 <p>The mapper has a JSON API, this is the only HTML page</p> 
 <p>You can find mapper statistics at <a href="api/stats">stats</a></p>
-</body></html>''')
+<p>${dataSource.connection.clientInfo}</p>
+<p>Config files ${configFiles}
+</body></html>""")
     }
 }

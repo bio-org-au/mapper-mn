@@ -78,12 +78,14 @@ If you need to install one try (YMMV):
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 ...
 # IPv4 local connections:
-host    all             all             192.168.0.0/24          md5 #<1>
-host    all             all             127.0.0.1/24            md5
+host    all             all             0.0.0.0/0               md5 #<1>
 ...
 ----
 
-<1> md5 is a hashed password authentication over TCP
+<1> md5 is a hashed password authentication over TCP and listen on all addresses
+
+TIP: Open port 5432 on any local firewall if you are using Docker so that the app can connect.
+
 
 If you don't have a mapper schema, you can need to create the schema. Get the `test/resource/ddl.sql` from the GitHub
 repository and run:
@@ -145,7 +147,19 @@ mapper {
 
 === Docker
 
+To run the mapper using Docker you need to map the config directory to etc/nsl using -v.
+
+Run the mapper from docker hub:
+
 * `docker run -p 8080:8080 -v $HOME/.nsl:/etc/nsl:ro pmcneil/nsl-mapper:2.0`
+
+Note your configuration will need to either use a host name or IP address, not localhost, for the database connection.
+
+TIP: You'll need to open firewall ports for the database connection and the web connection (e.g. 5432 and 8080) if
+your OS has a firewall.
+
+Stop the running container using `docker container stop <container ID>` where <container ID> is found using
+`docker container ls`.
 
 === Development
 

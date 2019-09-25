@@ -22,6 +22,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.Synchronized
 import groovy.util.logging.Slf4j
 import io.micronaut.context.annotation.Property
+import io.micronaut.context.annotation.Requires
 import io.micronaut.scheduling.annotation.Async
 
 import javax.inject.Inject
@@ -36,6 +37,7 @@ import javax.sql.DataSource
 @Slf4j
 @CompileStatic
 @Singleton
+@Requires(beans = DataSource.class)
 class MappingServiceImpl implements MappingService {
 
     @Inject

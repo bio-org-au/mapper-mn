@@ -1,0 +1,504 @@
+openapi: 3.0.1
+info:
+  title: Mapper
+  version: "2.0"
+security: []
+paths:
+  /api/preferred-host:
+    get:
+      operationId: preferredHost
+      parameters: []
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/preferred-link/{objectType}/{nameSpace}/{idNumber}:
+    get:
+      operationId: preferredLink
+      parameters:
+      - name: nameSpace
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: objectType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: idNumber
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/links/{objectType}/{nameSpace}/{idNumber}:
+    get:
+      operationId: links
+      parameters:
+      - name: nameSpace
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: objectType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: idNumber
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkResult'
+  /api/current-identity:
+    get:
+      operationId: currentIdentity
+      parameters:
+      - name: uri
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Identifier'
+  /api/stats:
+    get:
+      operationId: stats
+      parameters: []
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/add-identifier:
+    put:
+      operationId: addIdentifierV1
+      parameters:
+      - name: nameSpace
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: objectType
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: idNumber
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: versionNumber
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: uri
+        in: query
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/add/{objectType}/{nameSpace}/{idNumber}:
+    put:
+      operationId: addNonVersionedIdentifier
+      parameters:
+      - name: nameSpace
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: objectType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: idNumber
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+        required: true
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}:
+    put:
+      operationId: addVersionedIdentifier
+      parameters:
+      - name: nameSpace
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: objectType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: idNumber
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: versionNumber
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+        required: true
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/add-host:
+    put:
+      operationId: addHost
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+        required: true
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/set-preferred-host:
+    put:
+      operationId: setPreferredHost
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+        required: true
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/bulk-add-identifiers:
+    post:
+      operationId: bulkAddIdentifiers
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+        required: true
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Object'
+  /api/bulk-remove-identifiers:
+    post:
+      operationId: bulkRemoveIdentifiers
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+        required: true
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Object'
+  /api/add-uri-to-identifier:
+    put:
+      operationId: addURI
+      parameters:
+      - name: nameSpace
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: objectType
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: idNumber
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: versionNumber
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: uri
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: preferred
+        in: query
+        required: true
+        schema:
+          type: boolean
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Object'
+  /api/move-identity:
+    post:
+      operationId: moveIdentity
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+        required: true
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Object'
+  /api/remove-identifier-from-uri:
+    delete:
+      operationId: removeIdentityFromUri
+      parameters:
+      - name: nameSpace
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: objectType
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: idNumber
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: versionNumber
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: uri
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Object'
+  /api/delete-identifier:
+    delete:
+      operationId: deleteIdentifier
+      parameters:
+      - name: nameSpace
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: objectType
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: idNumber
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: versionNumber
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: reason
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Object'
+  /broker{/path:.*}:
+    get:
+      operationId: index
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          nullable: true
+      responses:
+        default:
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Object'
+  /:
+    get:
+      operationId: index
+      parameters: []
+      responses:
+        default:
+          content:
+            text/html:
+              schema:
+                $ref: '#/components/schemas/Object'
+components:
+  schemas:
+    LinkResult:
+      type: object
+      properties:
+        link:
+          type: string
+        resourceCount:
+          type: integer
+          format: int32
+        preferred:
+          type: boolean
+        deprecated:
+          type: boolean
+        deleted:
+          type: boolean
+    Identifier:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nameSpace:
+          type: string
+        objectType:
+          type: string
+        idNumber:
+          type: integer
+          format: int64
+        versionNumber:
+          type: integer
+          format: int64
+        deleted:
+          type: boolean
+        reasonDeleted:
+          type: string
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedBy:
+          type: string
+    Timestamp:
+      type: object
+      properties:
+        nanos:
+          type: integer
+          format: int32
+      allOf:
+      - type: string
+        format: date-time
+    Object:
+      type: object
