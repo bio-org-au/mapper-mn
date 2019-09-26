@@ -40,6 +40,9 @@ class IndexController {
     @Property(name = "micronaut.config.files")
     String configFiles
 
+    @Property(name = "mapper.db.url")
+    String dbUrl
+
     @PermitAll
     @Produces(MediaType.TEXT_HTML)
     @Get("/")
@@ -52,7 +55,7 @@ and we have a configuration problem. (all resolvable URLs should be pointed at /
 </p>
 <p>The mapper has a JSON API, this is the only HTML page</p> 
 <p>You can find mapper statistics at <a href="api/stats">stats</a></p>
-<p>${dataSource.connection.clientInfo}</p>
+<p>Connected to DB ${dbUrl}</p>
 <p>Config files ${configFiles}
 </body></html>""")
     }

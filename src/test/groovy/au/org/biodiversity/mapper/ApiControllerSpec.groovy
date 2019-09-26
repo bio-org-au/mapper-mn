@@ -29,6 +29,8 @@ import io.micronaut.security.token.jwt.render.AccessRefreshToken
 import io.micronaut.security.token.jwt.render.BearerAccessRefreshToken
 import io.micronaut.test.annotation.MicronautTest
 import io.reactivex.Flowable
+import spock.lang.AutoCleanup
+import spock.lang.Shared
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -49,6 +51,8 @@ class ApiControllerSpec extends Specification {
     @Inject
     EmbeddedServer embeddedServer
 
+    @Shared
+    @AutoCleanup
     @Inject
     @Client(value = "/api/", configuration = TestHttpClientConfiguration.class)
     HttpClient client
