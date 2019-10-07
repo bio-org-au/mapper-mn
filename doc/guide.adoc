@@ -38,7 +38,7 @@ You can map a URI to different servers based on the content type requested, e.g.
 * only serving up JSON, we will not respond with xml on our mapper API as it's not used
 * get version of add-identifier has been deprecated, there are two new put versions of add-identifier
 * removed bulkRemoveByUri as it wasn't used
-* changed addURI  to add-uri-to-identity
+* changed addURI to add-uri-to-identity
 * removed addIdentifierToUri as functionally equivalent to add uri to identifier
 
 == Configuration
@@ -686,10 +686,9 @@ Response Body
 }
 ----
 
-=== PUT /set-preferred-host
-* RolesAllowed('admin')
+=== GET /preferred-host
 * Produces(MediaType.TEXT_JSON)
-* Put("/set-preferred-host")
+* Get("/preferred-host")
 
 ----
 Sending HTTP Request: GET /api/preferred-host

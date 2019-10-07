@@ -151,9 +151,11 @@ To run the mapper using Docker you need to map the config directory to etc/nsl u
 
 Run the mapper from docker hub:
 
-* `docker run -p 8080:8080 -v $HOME/.nsl:/etc/nsl:ro pmcneil/nsl-mapper:2.0`
+* `docker run -p 127.0.0.1:7070:8080 -v $HOME/.nsl:/etc/nsl:ro pmcneil/nsl-mapper:2.0`
 
 Note your configuration will need to either use a host name or IP address, not localhost, for the database connection.
+
+See  https://docs.docker.com/v17.12/edge/engine/reference/run/[Publish or expose port (-p, –expose)]
 
 TIP: You'll need to open firewall ports for the database connection and the web connection (e.g. 5432 and 8080) if
 your OS has a firewall.

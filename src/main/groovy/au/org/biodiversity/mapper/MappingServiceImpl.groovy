@@ -146,7 +146,8 @@ class MappingServiceImpl implements MappingService {
                 join mapper.match m on i.preferred_uri_id = m.id
                 join mapper.match_host mh on m.id = mh.match_hosts_id
                 join mapper.host h on mh.host_id = h.id
-            where name_space = :nameSpace and object_type = :objectType and id_number = :idNumber''',
+            where name_space = :nameSpace and object_type = :objectType and id_number = :idNumber
+            order by h.preferred desc''',
                     [nameSpace: nameSpace, objectType: objectType, idNumber: idNumber])
             return row ? "${defaultProtocol}://${row.uri}" : null
         }
