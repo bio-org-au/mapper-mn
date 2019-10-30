@@ -11,5 +11,5 @@ cache:
 services:
   - postgresql
 script:
-  - gradle clean
-  - gradle build
+  - ./gradlew clean
+  - ./gradlew build
