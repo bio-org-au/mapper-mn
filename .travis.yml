@@ -12,6 +12,8 @@ addons:
   postgresql: "9.6"
 services:
   - postgresql
+before-script:
+  - cp src/test/resource/application-test.yml.travis src/main/resources/application-test.yml
 script:
   - ./gradlew clean
   - ./gradlew build

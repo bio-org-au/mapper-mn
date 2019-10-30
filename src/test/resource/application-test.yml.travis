@@ -5,8 +5,7 @@ micronaut:
 datasources:
   default:
     url: jdbc:postgresql://localhost:5432/nsl-test
-    username: nsl
-    password: nsl
+    username: postgres
     driverClassName: org.postgresql.Driver
     autoCommit: false
     schema: mapper
