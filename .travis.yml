@@ -12,6 +12,7 @@ addons:
   postgresql: "9.6"
 services:
   - postgresql
+  - docker
 script:
   - cp src/test/resource/application-test.yml.travis src/main/resources/application-test.yml
   - ls src/main/resources/

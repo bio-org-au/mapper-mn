@@ -76,3 +76,28 @@ task createTestDb(type: Exec) {
 tasks.withType(Test) {
     dependsOn(createTestDb)
 }
+
+task dockerPublish() {
+    dependsOn(assemble)
+    doFirst {
+        exec {
+            workingDir(projectDir)
+            ignoreExitValue(true)
+            commandLine 'docker', 'image', 'rm', 'mapper'
+        }
+    }
+    doLast {
+        exec {
+            workingDir(projectDir)
+            commandLine 'docker', 'build', '--tag=nsl-mapper', '.'
+        }
+        exec {
+            workingDir(projectDir)
+            commandLine "docker", "tag", "nsl-services", "pmcneil/nsl-mapper:${version}"
+        }
+        exec {
+            workingDir(projectDir)
+            commandLine "docker", "push", "pmcneil/nsl-mapper:${version}"
+        }
+    }
+}
