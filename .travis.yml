@@ -15,5 +15,7 @@ services:
 before-script:
   - cp src/test/resource/application-test.yml.travis src/main/resources/application-test.yml
 script:
+  - ls src/main/resources/
+  - cat src/main/resources/application-test.yml
   - ./gradlew clean
   - ./gradlew build
