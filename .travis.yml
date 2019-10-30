@@ -19,3 +19,5 @@ script:
   - cat src/main/resources/application-test.yml
   - ./gradlew clean
   - ./gradlew build
+  - echo "$docker_token" | docker login -u "$docker_user" --password-stdin
+  - ./gradlew dockerPublish
