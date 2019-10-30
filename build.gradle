@@ -83,7 +83,7 @@ task dockerPublish() {
         exec {
             workingDir(projectDir)
             ignoreExitValue(true)
-            commandLine 'docker', 'image', 'rm', 'mapper'
+            commandLine 'docker', 'image', 'rm', 'nsl-mapper'
         }
     }
     doLast {
@@ -93,7 +93,7 @@ task dockerPublish() {
         }
         exec {
             workingDir(projectDir)
-            commandLine "docker", "tag", "nsl-services", "pmcneil/nsl-mapper:${version}"
+            commandLine "docker", "tag", "nsl-mapper", "pmcneil/nsl-mapper:${version}"
         }
         exec {
             workingDir(projectDir)
