@@ -93,11 +93,11 @@ task dockerPublish() {
         }
         exec {
             workingDir(projectDir)
-            commandLine "docker", "tag", "nsl-mapper", "pmcneil/nsl-mapper:${version}"
+            commandLine "docker", "tag", "nsl-mapper", "biodiversity/nsl-mapper:${version}"
         }
         exec {
             workingDir(projectDir)
-            commandLine "docker", "push", "pmcneil/nsl-mapper:${version}"
+            commandLine "docker", "push", "biodiversity/nsl-mapper:${version}"
         }
     }
 }
