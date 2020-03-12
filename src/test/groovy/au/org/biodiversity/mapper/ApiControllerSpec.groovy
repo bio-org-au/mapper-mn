@@ -32,6 +32,7 @@ import io.reactivex.Flowable
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import javax.inject.Inject
 
@@ -150,6 +151,7 @@ class ApiControllerSpec extends Specification {
         resp.size() == 0
     }
 
+    @Unroll
     void "test add identifier"() {
         given:
         String token = login()
@@ -182,6 +184,7 @@ class ApiControllerSpec extends Specification {
         'electronics' | 'timer'       | 555      | null          | null             | 'timer/electronics/555'
         'electronics' | 'timer'       | 556      | null          | 'dual-timer/556' | 'dual-timer/556'
         'apni'        | 'treeElement' | 111      | 222           | null             | 'treeElement/222/111'
+        'apni'        | 'treeElement' | 222      | 222           | 'tree/222/222'   | 'tree/222/222'
         'apni'        | 'treeElement' | 222      | 222           | 'tree/222/222'   | 'tree/222/222'
     }
 

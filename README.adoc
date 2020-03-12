@@ -13,6 +13,8 @@ v2.0, September 2019
 :numbered:
 :sectlinks:
 
+image:https://travis-ci.org/bio-org-au/mapper-mn.svg?branch=master["Build Status", link="https://travis-ci.org/bio-org-au/mapper-mn"]
+
 == Introduction
 
 The *Mapper* maps URI *identifiers* to *resources* based on content negotiation. It is the place an ID is created and
