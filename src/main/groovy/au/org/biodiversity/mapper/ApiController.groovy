@@ -147,7 +147,8 @@ class ApiController {
     @Get("/current-identity{?uri}")
     List<Identifier> currentIdentity(@QueryValue Optional<String> uri) {
         println "uri is ${uri.get()}"
-        MatchingInfo matchInfo = new MatchingInfo(uri.get(), matchRegex)
+        String u = URLDecoder.decode(uri.get(), 'UTF-8')
+        MatchingInfo matchInfo = new MatchingInfo(u, matchRegex)
         List<Identifier> links = mappingService.getMatchIdentities(matchInfo.path)
         println links
         return links

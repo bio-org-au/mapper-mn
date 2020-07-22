@@ -4,9 +4,6 @@ v2.0, September 2019
 :toclevels: 4
 :toc-class: toc2
 :icons: font
-:imagesdir: resources/images/
-:stylesdir: resources/style/
-:stylesheet: asciidoctor.css
 :description: Mapper documentation
 :keywords: documentation, Grails, Mapper, NSL, V2.0, micronaut
 :links:
@@ -174,6 +171,9 @@ Stop the running container using `docker container stop <container ID>` where <c
 5. browse to localhost:8080/ to see mapper page
 
 to stop just press CTRL-C.
+
+NOTE: you can change the default port that Micronaut uses by setting the environment variable `MICRONAUT_SERVER_PORT=8086`.
+You can also set it in the resources/application.yml see: https://docs.micronaut.io/latest/guide/index.html#runningSpecificPort
 
 See: link:doc/guide.adoc[]
 
