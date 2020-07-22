@@ -175,6 +175,8 @@ to stop just press CTRL-C.
 NOTE: you can change the default port that Micronaut uses by setting the environment variable `MICRONAUT_SERVER_PORT=8086`.
 You can also set it in the resources/application.yml see: https://docs.micronaut.io/latest/guide/index.html#runningSpecificPort
 
+TIP: There is a `run-mapper.sh` script you can used to run the mapper from a jar. Make sure you edit it and set the appropriate environment variables for your environment.
+
 See: link:doc/guide.adoc[]
 
 ==== Testing
