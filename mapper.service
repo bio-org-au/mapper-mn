@@ -1,0 +1,17 @@
+[Unit]
+Description=Mapper Service
+
+[Service]
+User=apni
+Group=apni
+EnvironmentFile=/etc/mapper-env
+ExecStart=/usr/bin/java \
+-XX:+UnlockExperimentalVMOptions \
+-XX:+UseCGroupMemoryLimitForHeap \
+-Dcom.sun.management.jmxremote \
+-noverify \
+-Dmicronaut.config.files=${CONFIG_FILE_LOCATION} \
+-jar ${JAR_FILE}
+
+[Install]
+WantedBy=multi-user.target

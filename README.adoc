@@ -182,3 +182,44 @@ See: link:doc/guide.adoc[]
 ==== Testing
 
 run `./gradlew test` after which the test reports will be in `build/reports/test`
+
+== Systemd
+
+For linux systems that use systemd you can take the example mapper.service file and put it in `/etc/systemd/system/`
+so you can start the mapper as a service. You will need an `EnvironmentFile` that defines the port, where the jar file is
+and mapper config file. By default the EnvironmentFile is `/etc/mapper-env`.
+
+[source]
+.mapper-env example
+----
+MICRONAUT_SERVER_PORT=7070
+CONFIG_FILE_LOCATION=/home/pmcneil/.nsl/mapper-config-mn.groovy <1>
+JAR_FILE=/opt/anbg/mapper-mn.jar
+----
+
+<1> change to suit where your config file lives.
+
+[source]
+.mapper.service
+----
+[Unit]
+Description=Mapper Service
+
+[Service]
+User=apni <1>
+Group=apni <2>
+EnvironmentFile=/etc/mapper-env
+ExecStart=/usr/bin/java \
+-XX:+UnlockExperimentalVMOptions \
+-XX:+UseCGroupMemoryLimitForHeap \
+-Dcom.sun.management.jmxremote \
+-noverify \
+-Dmicronaut.config.files=${CONFIG_FILE_LOCATION} \
+-jar ${JAR_FILE}
+
+[Install]
+WantedBy=multi-user.target
+----
+
+<1> set the appropriate system user
+<2> set the appropriate system group
