@@ -15,6 +15,7 @@
 */
 package au.org.biodiversity.mapper
 
+import groovy.util.logging.Slf4j
 import io.micronaut.context.annotation.Property
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
@@ -34,6 +35,7 @@ import javax.inject.Inject
  * Date: 2/9/19
  *
  */
+@Slf4j
 @Controller('/broker')
 class BrokerController {
 
@@ -49,9 +51,9 @@ class BrokerController {
     @Get("/{/path:.*}")
     HttpResponse index(@PathVariable @Nullable String path, HttpRequest<?> request) {
 
-        println "Request to ${request.uri}"
+        log.info "Request to ${request.uri}"
         MatchingInfo mInfo = new MatchingInfo(request.uri, matchRegex)
-        println "Looking for ${mInfo.path}"
+        log.info "Looking for ${mInfo.path}"
 
         Tuple2 matchIdentity = mappingService.getMatchIdentity(mInfo.path)
         if (matchIdentity) {
@@ -65,7 +67,7 @@ class BrokerController {
             }
             return seeOther(identifier, mInfo, request)
         }
-        println "Path you want: $mInfo.path Not Found!"
+        log.info "Path you want: $mInfo.path Not Found!"
         return notFound("$mInfo.path not found")
     }
     
@@ -74,7 +76,7 @@ class BrokerController {
         MediaType contentType = contentNegService.chooseContentType(request.headers.accept(), mInfo.extension)
         String serviceUrl = contentNegService.resolveServiceUrl(identifier, contentType.name)
 
-        println "Identifier: $identifier\n see: $serviceUrl"
+        log.info "Identifier: $identifier\n see: $serviceUrl"
         if (serviceUrl) {
             return HttpResponse
                     .status(HttpStatus.SEE_OTHER)
@@ -88,7 +90,7 @@ class BrokerController {
         Match preferredUrl = identifier.getPreferredUri()
         String host = mappingService.getPreferredHost()
         if (preferredUrl) {
-            println "Identifier: $identifier\n moved permanently to: $host/$preferredUrl.uri"
+            log.info "Identifier: $identifier\n moved permanently to: $host/$preferredUrl.uri"
             return HttpResponse
                     .status(HttpStatus.MOVED_PERMANENTLY)
                     .header("Cache-Control", "no-cache, must-revalidate")

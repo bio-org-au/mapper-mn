@@ -15,18 +15,21 @@
 */
 package au.org.biodiversity.mapper
 
+import groovy.util.logging.Slf4j
+
 /**
  * User: pmcneil
  * Date: 16/9/19
  *
  */
+@Slf4j
 class Host {
     Long id
     String hostName
     Boolean preferred
 
     Host(Map values, String prefix = 'h_') {
-        println values.toString()
+        log.info "Host Values: ${values.toString()}"
         assert values.size() == 3
         id = values."${prefix}id" as Long
         hostName = values."${prefix}host_name"
@@ -34,7 +37,7 @@ class Host {
     }
 
     Host(List values) {
-        println values.toString()
+        log.info "Host Values: ${values.toString()}"
         assert values.size() == 3
         id = values[0] as Long
         hostName = values[1] as String

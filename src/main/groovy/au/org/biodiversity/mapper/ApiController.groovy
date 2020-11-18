@@ -15,6 +15,7 @@
 */
 package au.org.biodiversity.mapper
 
+import groovy.util.logging.Slf4j
 import io.micronaut.context.annotation.Property
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
@@ -33,6 +34,7 @@ import java.security.Principal
  * Date: 9/9/19
  *
  */
+@Slf4j
 @Secured(SecurityRule.IS_AUTHENTICATED)
 @Controller("/api")
 class ApiController {
@@ -60,6 +62,7 @@ class ApiController {
         if (host) {
             return [host: host]
         }
+        log.info("/preferred-host - NULL. Check mapper host")
         return null
     }
 
@@ -82,9 +85,11 @@ class ApiController {
     @Get("/preferred-link/{objectType}/{nameSpace}/{idNumber}")
     Map preferredLink(@PathVariable String nameSpace, @PathVariable String objectType, @PathVariable Long idNumber) {
         String link = mappingService.getPreferredLink(nameSpace, objectType, idNumber)
+        log.info("/preferred-link -> ${link}")
         if (link) {
             return [link: link]
         }
+        log.warn("/preferred-link is NULL")
         return null
     }
 
@@ -119,6 +124,7 @@ class ApiController {
     @Get("/links/{objectType}/{nameSpace}/{idNumber}")
     List<LinkResult> links(@PathVariable String nameSpace, @PathVariable String objectType, @PathVariable Long idNumber) {
         List<LinkResult> links = mappingService.getlinks(nameSpace, objectType, idNumber)
+        log.info("/links/{objectType}/{nameSpace}/{idNumber} -> N0 of Links: ${links.size().toString()}")
         return links.empty ? null : links
     }
 
@@ -146,11 +152,11 @@ class ApiController {
     @Produces(MediaType.TEXT_JSON)
     @Get("/current-identity{?uri}")
     List<Identifier> currentIdentity(@QueryValue Optional<String> uri) {
-        println "uri is ${uri.get()}"
+        log.info "/current-identity{?uri} -> uri is ${uri.get()}"
         String u = URLDecoder.decode(uri.get(), 'UTF-8')
         MatchingInfo matchInfo = new MatchingInfo(u, matchRegex)
         List<Identifier> links = mappingService.getMatchIdentities(matchInfo.path)
-        println links
+        log.info "Links: ${links}"
         return links
     }
 
@@ -185,7 +191,7 @@ class ApiController {
                         @QueryValue Optional<Long> idNumber,
                         @QueryValue Optional<Long> versionNumber,
                         @QueryValue Optional<String> uri, Principal principal) {
-        println "Add identifier $nameSpace, $objectType, $idNumber, $versionNumber -> $uri"
+        log.info "/add-identifier -> $nameSpace, $objectType, $idNumber, $versionNumber -> $uri"
         Identifier identifier = mappingService.addIdentifier(nameSpace.get(),
                 objectType.get(),
                 idNumber.get(),
@@ -203,7 +209,7 @@ class ApiController {
                                   @PathVariable Long idNumber,
                                   @Body Map body, Principal principal) {
         String uri = body.uri
-        println "Add $objectType/$nameSpace/$idNumber (uri: $uri)"
+        log.info "Add $objectType/$nameSpace/$idNumber (uri: $uri)"
         Identifier identifier = mappingService.addIdentifier(nameSpace,
                 objectType,
                 idNumber,
@@ -223,7 +229,7 @@ class ApiController {
                                @Body Map body, Principal principal
     ) {
         String uri = body.uri
-        println "Add $objectType/$idNumber/$versionNumber -> namespace: $nameSpace, uri:$uri"
+        log.info "Add $objectType/$idNumber/$versionNumber -> namespace: $nameSpace, uri:$uri"
         Identifier identifier = mappingService.addIdentifier(nameSpace,
                 objectType,
                 idNumber,
@@ -239,6 +245,7 @@ class ApiController {
     Map addHost(@Body Map body) {
         String hostName = body.hostName
         Host host = mappingService.addHost(hostName)
+        log.info("/add-host -> $hostName")
         return [host: host]
     }
 
@@ -249,8 +256,10 @@ class ApiController {
         try {
             String hostName = body.hostName
             Host host = mappingService.setPreferredHost(hostName)
+            log.info("Setting hostname to ${hostName}")
             return [host: host]
         } catch (NotFoundException nfe) {
+            log.warn("Unable to set preferred hostname")
             return null
         }
     }
@@ -260,6 +269,7 @@ class ApiController {
     @Post("/bulk-add-identifiers")
     HttpResponse bulkAddIdentifiers(@Body Map body, Principal principal) {
         Set<Map> identifiers = body.identifiers as Set<Map>
+        log.info("/bulk-add-identifiers -> Adding ${identifiers.size().toString()} identifier[s]")
         if (mappingService.bulkAddIdentifiers(identifiers, principal.getName())) {
             return HttpResponse.<Map> ok(success: true, message: "${identifiers.size()} identities added.".toString())
         }
@@ -271,6 +281,7 @@ class ApiController {
     @Post("/bulk-remove-identifiers")
     HttpResponse bulkRemoveIdentifiers(@Body Map body) {
         Set<Map> identifiers = body.identifiers as Set<Map>
+        log.info("/bulk-add-identifiers -> Removing ${identifiers.size().toString()} identifier[s]")
         if (mappingService.bulkRemoveIdentifiers(identifiers)) {
             return HttpResponse.<Map> ok(success: true, message: "${identifiers.size()} identities removed.".toString())
         }
@@ -346,6 +357,7 @@ class ApiController {
                                   @QueryValue Optional<Long> versionNumber,
                                   @QueryValue Optional<String> reason) {
         Identifier identifier = mappingService.findIdentifier(nameSpace.get(), objectType.get(), idNumber.get(), versionNumber.orElse(null))
+        log.info("/delete-identifier -> Deleting ${identifier.toString()}")
         if (identifier) {
             try {
                 Identifier refreshedIdentifier = mappingService.deleteIdentifier(identifier, reason.orElse(null))

@@ -15,6 +15,8 @@
 */
 package au.org.biodiversity.mapper
 
+import groovy.util.logging.Slf4j
+
 import java.util.regex.Matcher
 
 /**
@@ -22,6 +24,7 @@ import java.util.regex.Matcher
  * Date: 5/9/19
  *
  */
+@Slf4j
 class MatchingInfo {
 
     String host
@@ -34,7 +37,7 @@ class MatchingInfo {
     }
 
     MatchingInfo(String uri, String matchRegex) {
-        println "Regex is: $matchRegex"
+        log.debug "Regex is: $matchRegex"
         String urlString = URLDecoder.decode(uri, 'UTF-8')
         List<String> parts = findBits(urlString, matchRegex)
         host = parts[1]

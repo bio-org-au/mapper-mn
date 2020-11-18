@@ -271,7 +271,7 @@ class MappingServiceImpl implements MappingService {
                 (uri, deprecated, updated_at, updated_by) VALUES (:uri, false, now(), :userName)''',
                         [uri: uri, userName: userName]
                 )
-                println m
+                log.info m as String
                 Long matchId = m[0][0] as Long
                 sql.executeInsert('''insert into mapper.match_host (match_hosts_id, host_id) 
                     VALUES (:matchId, (select id from mapper.host where preferred limit 1))''', [matchId: matchId])
@@ -308,6 +308,7 @@ class MappingServiceImpl implements MappingService {
     Boolean removeIdentifier(Identifier identifier) {
         //remove the identifier from identifier_identities
         //delete the identifier
+        log.info("Removing identifier ${identifier.toString()}")
         Boolean success = false
         withSql { Sql sql ->
             sql.withTransaction {
@@ -316,9 +317,9 @@ class MappingServiceImpl implements MappingService {
                     delete from mapper.identifier i where id = :identifierID;''', [identifierID: identifier.id])
                 success = true
             }
-
         }
         if (success) {
+            log.info("Successfully Removed identifier: ${identifier.toString()}")
             cleanupOrphanMatch()
         }
         return success
@@ -336,7 +337,7 @@ class MappingServiceImpl implements MappingService {
                     delete from mapper.match_host where match_hosts_id in (select id from orphanMatch);
                     delete from mapper.match where id in (select id from orphanMatch);''')
             }
-            log.info "clean up transaction complete"
+            log.info "clean up orphans transaction complete"
         }
     }
 
@@ -373,6 +374,7 @@ class MappingServiceImpl implements MappingService {
                     insert into mapper.identifier_identities (match_id, identifier_id) (select m_id, i_id from bulkInsert);
                     insert into mapper.match_host (match_hosts_id, host_id) SELECT m_id,ph.id from bulkInsert, (SELECT h.id FROM mapper.host h WHERE h.preferred) ph;''')
                 success = true
+                log.info "Creating identifier, matches, and linking -> Done"
             }
             return success
         }
@@ -380,11 +382,12 @@ class MappingServiceImpl implements MappingService {
 
     private static String insertBulkTempTable(Collection<Map> identifiers, String username) {
         List<String> insert = []
+        log.info "Start making temp bulk insert"
         for (Map ident in identifiers) {
             insert.add("('${ident.u}', '${ident.s}', '${ident.o}', ${ident.i}, ${ident.v})".toString())
         }
         String stmt = 'INSERT INTO bulkInsert (m_uri, i_name_space, i_object_type, i_id_number, i_version_number) VALUES ' + insert.join(',')
-        log.info "finished making temp bulk insert"
+        log.info "Finished making temp bulk insert"
         return stmt
     }
 
@@ -394,7 +397,7 @@ class MappingServiceImpl implements MappingService {
      */
     @Synchronized
     Boolean bulkRemoveIdentifiers(Collection<Map> identifiers) {
-        log.info "Removing ${identifiers.size()} identifiers"
+        log.info "Start removing ${identifiers.size()} identifiers"
         Boolean success = false
         withSql { Sql sql ->
             sql.withTransaction {
@@ -428,17 +431,18 @@ class MappingServiceImpl implements MappingService {
             }
         }
         cleanupOrphanMatch()
-        log.info "complete"
+        log.info "Finish removing ${identifiers.size()} identifiers"
         return success
     }
 
     private static String insertBulkRemoveTable(Collection<Map> identifiers) {
         List<String> insert = []
+        log.info "Start making temp bulk remove insert"
         for (Map ident in identifiers) {
             insert.add("('${ident.s}', '${ident.o}', ${ident.i}, ${ident.v})".toString())
         }
         String stmt = 'INSERT INTO bulkRemove (name_space, object_type, id_number, version_number) VALUES ' + insert.join(',')
-        log.info "finished making temp bulk remove insert"
+        log.info "Finished making temp bulk remove insert"
         return stmt
     }
 
