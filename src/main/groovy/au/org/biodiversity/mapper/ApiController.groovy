@@ -271,8 +271,10 @@ class ApiController {
         Set<Map> identifiers = body.identifiers as Set<Map>
         log.info("/bulk-add-identifiers -> Adding ${identifiers.size().toString()} identifier[s]")
         if (mappingService.bulkAddIdentifiers(identifiers, principal.getName())) {
+            log.info("bulk-add-identifiers - Successfully added all identifiers")
             return HttpResponse.<Map> ok(success: true, message: "${identifiers.size()} identities added.".toString())
         }
+        log.error("bulk-add-identifiers - Returning Server Error")
         return HttpResponse.serverError()
     }
 
@@ -281,10 +283,12 @@ class ApiController {
     @Post("/bulk-remove-identifiers")
     HttpResponse bulkRemoveIdentifiers(@Body Map body) {
         Set<Map> identifiers = body.identifiers as Set<Map>
-        log.info("/bulk-add-identifiers -> Removing ${identifiers.size().toString()} identifier[s]")
+        log.info("/bulk-remove-identifiers -> Removing ${identifiers.size().toString()} identifier[s]")
         if (mappingService.bulkRemoveIdentifiers(identifiers)) {
+            log.info("bulk-remove-identifiers - Successfully removed all identifiers")
             return HttpResponse.<Map> ok(success: true, message: "${identifiers.size()} identities removed.".toString())
         }
+        log.error("bulk-add-identifiers - Returning Server Error")
         return HttpResponse.serverError()
     }
 
