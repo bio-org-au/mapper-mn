@@ -2,9 +2,10 @@ micronaut:
   application:
     name: mapper-mn
   server:
-    max-request-size: 4mb
-    multipart.max-file-size: 4mb  #todo remove when bug fixed https://github.com/micronaut-projects/micronaut-core/issues/1882
+    max-request-size: 4194304  # 4mb
+    multipart.max-file-size: 4194304  #todo remove when bug fixed https://github.com/micronaut-projects/micronaut-core/issues/1882
     netty.log-level: DEBUG
+    thread-selection: AUTO
   router:
     static-resources:
       swagger:
@@ -12,6 +13,7 @@ micronaut:
         mapping: /swagger/**
   security:
     enabled: true
+    authentication: bearer
     intercept-url-map:
       - pattern: /swagger/**
         access:
@@ -23,6 +25,8 @@ micronaut:
       oauth:
         enabled: true
         path: /api/oauth/access_token
+      loggers:
+        write-sensitive: false
     token:
       jwt:
         enabled: true
@@ -30,6 +34,12 @@ micronaut:
           secret:
             generator:
               secret: thisiscoolbutstillshouldbechanged
+            refresh-token:
+              secret: thisiscoolbutstillshouldbechanged
+---
+mapper:
+  brokerRegex: ^(https?://[^/]*)?/broker/(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
+  urlRegex: ^(https?://[^/]*)?/?(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
 ---
 datasources:
   default:
@@ -40,8 +50,4 @@ datasources:
     autoCommit: false
     schema: mapper
     socketTimeout: 30
----
-mapper:
-  brokerRegex: ^(https?://[^/]*)?/broker/(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
-  urlRegex: ^(https?://[^/]*)?/?(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
 

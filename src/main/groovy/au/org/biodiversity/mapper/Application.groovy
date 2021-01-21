@@ -30,6 +30,7 @@ import io.swagger.v3.oas.annotations.info.Info
 @CompileStatic
 class Application {
     static void main(String[] args) {
+        println("Starting Application")
         Micronaut.run(Application)
     }
 

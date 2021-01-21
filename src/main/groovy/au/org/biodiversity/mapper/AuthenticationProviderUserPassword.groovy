@@ -15,7 +15,10 @@
 */
 package au.org.biodiversity.mapper
 
+import edu.umd.cs.findbugs.annotations.Nullable
 import io.micronaut.context.annotation.Property
+import io.micronaut.http.HttpRequest
+import io.micronaut.security.authentication.AuthenticationException
 import io.micronaut.security.authentication.AuthenticationFailed
 import io.micronaut.security.authentication.AuthenticationProvider
 import io.micronaut.security.authentication.AuthenticationRequest
@@ -23,6 +26,8 @@ import io.micronaut.security.authentication.AuthenticationResponse
 import io.micronaut.security.authentication.UserDetails
 import io.reactivex.Flowable
 import org.reactivestreams.Publisher
+import groovy.util.logging.Slf4j
+import io.reactivex.BackpressureStrategy
 
 import javax.inject.Singleton
 
@@ -31,6 +36,7 @@ import javax.inject.Singleton
  * Date: 12/9/19
  *
  */
+@Slf4j
 @Singleton
 class AuthenticationProviderUserPassword implements AuthenticationProvider {
 
@@ -38,12 +44,31 @@ class AuthenticationProviderUserPassword implements AuthenticationProvider {
     Map authMap
 
     @Override
-    Publisher<AuthenticationResponse> authenticate(AuthenticationRequest authenticationRequest) {
+//    Publisher<AuthenticationResponse> authenticate(HttpRequest req, AuthenticationRequest authenticationRequest) {
+//        String username = authenticationRequest.getIdentity()
+//        log.info("Username -> ${username} requesting token")
+//        Map authData = authMap[username] as Map
+//        if ( authData && authenticationRequest.getSecret().equals(authData.secret) ) {
+//            return Flowable.just(new UserDetails((String) authenticationRequest.getIdentity(), authData.roles as List))
+//        }
+//        log.info "${username} caused an Auth Exception"
+//        return Flowable.just(new AuthenticationFailed())
+//    }
+
+
+    Publisher<AuthenticationResponse> authenticate(@Nullable HttpRequest<?> httpRequest, AuthenticationRequest<?, ?> authenticationRequest) {
         String username = authenticationRequest.getIdentity()
+        log.info("Username -> ${username} requesting token")
         Map authData = authMap[username] as Map
-        if ( authData && authenticationRequest.getSecret().equals(authData.secret) ) {
-            return Flowable.just(new UserDetails((String) authenticationRequest.getIdentity(), authData.roles as List))
-        }
-        return Flowable.just(new AuthenticationFailed())
+        Flowable.create(emitter -> {
+            if (authData && authenticationRequest.getIdentity() == username
+                    && authenticationRequest.getSecret() == authData.secret) {
+                emitter.onNext(new UserDetails(username, authData.roles as List))
+                emitter.onComplete()
+            } else {
+                log.info "${username} caused an Auth Exception"
+                emitter.onError(new AuthenticationException(new AuthenticationFailed("Auth Failed")))
+            }
+        }, BackpressureStrategy.ERROR)
     }
 }

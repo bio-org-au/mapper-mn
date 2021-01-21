@@ -55,14 +55,14 @@ class ApiController {
      * @return Map {"host": "String"}
      */
     @PermitAll
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Get("/preferred-host")
     Map preferredHost() {
         String host = mappingService.preferredHost
         if (host) {
             return [host: host]
         }
-        log.info("/preferred-host - NULL. Check mapper host")
+        log.info("/preferred-host -> NULL. Check mapper host")
         return null
     }
 
@@ -81,15 +81,15 @@ class ApiController {
      * @return Map {"link": "String"}
      */
     @PermitAll
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Get("/preferred-link/{objectType}/{nameSpace}/{idNumber}")
     Map preferredLink(@PathVariable String nameSpace, @PathVariable String objectType, @PathVariable Long idNumber) {
         String link = mappingService.getPreferredLink(nameSpace, objectType, idNumber)
-        log.info("/preferred-link -> ${link}")
+        log.info("Getting /preferred-link for ${objectType}/${nameSpace}/${idNumber}")
         if (link) {
             return [link: link]
         }
-        log.warn("/preferred-link is NULL")
+        log.warn("/preferred-link -> Null")
         return null
     }
 
@@ -120,7 +120,7 @@ class ApiController {
      * @return JSON List of map
      */
     @PermitAll
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Get("/links/{objectType}/{nameSpace}/{idNumber}")
     List<LinkResult> links(@PathVariable String nameSpace, @PathVariable String objectType, @PathVariable Long idNumber) {
         List<LinkResult> links = mappingService.getlinks(nameSpace, objectType, idNumber)
@@ -149,7 +149,7 @@ class ApiController {
      * @return a List of @see au.org.biodiversity.mapper.Identifier
      */
     @PermitAll
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Get("/current-identity{?uri}")
     List<Identifier> currentIdentity(@QueryValue Optional<String> uri) {
         log.info "/current-identity{?uri} -> uri is ${uri.get()}"
@@ -184,13 +184,13 @@ class ApiController {
 //**** Secured endpoints
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Put("/add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     Map addIdentifierV1(@QueryValue Optional<String> nameSpace,
                         @QueryValue Optional<String> objectType,
                         @QueryValue Optional<Long> idNumber,
                         @QueryValue Optional<Long> versionNumber,
-                        @QueryValue Optional<String> uri, Principal principal) {
+                        @QueryValue Optional<String> uri,  Principal principal) {
         log.info "/add-identifier -> $nameSpace, $objectType, $idNumber, $versionNumber -> $uri"
         Identifier identifier = mappingService.addIdentifier(nameSpace.get(),
                 objectType.get(),
@@ -202,12 +202,13 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Put("/add/{objectType}/{nameSpace}/{idNumber}")
     Map addNonVersionedIdentifier(@PathVariable String nameSpace,
                                   @PathVariable String objectType,
                                   @PathVariable Long idNumber,
-                                  @Body Map body, Principal principal) {
+                                  @Body Map body,
+                                  Principal principal) {
         String uri = body.uri
         log.info "Add $objectType/$nameSpace/$idNumber (uri: $uri)"
         Identifier identifier = mappingService.addIdentifier(nameSpace,
@@ -220,7 +221,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Put("/add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}")
     Map addVersionedIdentifier(@PathVariable String nameSpace,
                                @PathVariable String objectType,
@@ -240,7 +241,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Put("/add-host")
     Map addHost(@Body Map body) {
         String hostName = body.hostName
@@ -250,7 +251,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Put("/set-preferred-host")
     Map setPreferredHost(@Body Map body) {
         try {
@@ -265,7 +266,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Post("/bulk-add-identifiers")
     HttpResponse bulkAddIdentifiers(@Body Map body, Principal principal) {
         Set<Map> identifiers = body.identifiers as Set<Map>
@@ -279,7 +280,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Post("/bulk-remove-identifiers")
     HttpResponse bulkRemoveIdentifiers(@Body Map body) {
         Set<Map> identifiers = body.identifiers as Set<Map>
@@ -293,7 +294,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Put("/add-uri-to-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}{?preferred}")
     HttpResponse addURI(@QueryValue Optional<String> nameSpace,
                         @QueryValue Optional<String> objectType,
@@ -313,7 +314,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Post("/move-identity")
     HttpResponse moveIdentity(@Body Map body) {
         Identifier from = mappingService.findIdentifier((String) body.fromNameSpace, (String) body.fromObjectType, (Long) body.fromIdNumber, (Long) body.fromVersionNumber)
@@ -331,7 +332,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Delete("/remove-identifier-from-uri{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     HttpResponse removeIdentityFromUri(@QueryValue Optional<String> nameSpace,
                                        @QueryValue Optional<String> objectType,
@@ -353,7 +354,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-    @Produces(MediaType.TEXT_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Delete("/delete-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?reason}")
     HttpResponse deleteIdentifier(@QueryValue Optional<String> nameSpace,
                                   @QueryValue Optional<String> objectType,

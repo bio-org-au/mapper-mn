@@ -50,7 +50,8 @@ class BrokerController {
     @Produces(MediaType.TEXT_PLAIN)
     @Get("/{/path:.*}")
     HttpResponse index(@PathVariable @Nullable String path, HttpRequest<?> request) {
-
+        if (!path) return notFound("Nothing here. Please enter a valid URL. Please check" +
+                "API options here. See https://github.com/bio-org-au/mapper-mn/blob/master/doc/guide.adoc#the-broker")
         log.info "Request to ${request.uri}"
         MatchingInfo mInfo = new MatchingInfo(request.uri, matchRegex)
         log.info "Looking for ${mInfo.path}"
@@ -67,7 +68,7 @@ class BrokerController {
             }
             return seeOther(identifier, mInfo, request)
         }
-        log.info "Path you want: $mInfo.path Not Found!"
+        log.info "Path: $mInfo.path Not Found!"
         return notFound("$mInfo.path not found")
     }
     
