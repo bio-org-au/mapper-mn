@@ -14,23 +14,23 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Optional;
 
-@Singleton
+@Singleton // <1>
 public class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public CustomRefreshTokenPersistence(RefreshTokenRepository refreshTokenRepository) {
+    public CustomRefreshTokenPersistence(RefreshTokenRepository refreshTokenRepository) {  // <2>
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Override
-    @EventListener
+    @EventListener  // <3>
     public void persistToken(RefreshTokenGeneratedEvent event) {
         if (event != null &&
                 event.getRefreshToken() != null &&
                 event.getUserDetails() != null &&
                 event.getUserDetails().getUsername() != null) {
             String payload = event.getRefreshToken();
-            refreshTokenRepository.save(event.getUserDetails() .getUsername(), payload, Boolean.FALSE);
+            refreshTokenRepository.save(event.getUserDetails() .getUsername(), payload, Boolean.FALSE); // <4>
         }
     }
 
@@ -41,13 +41,13 @@ public class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
             if (tokenOpt.isPresent()) {
                 RefreshTokenEntity token = tokenOpt.get();
                 if (token.getRevoked()) {
-                    emitter.onError(new OauthErrorResponseException(IssuingAnAccessTokenErrorCode.INVALID_GRANT, "refresh token revoked", null));
+                    emitter.onError(new OauthErrorResponseException(IssuingAnAccessTokenErrorCode.INVALID_GRANT, "refresh token revoked", null)); // <5>
                 } else {
-                    emitter.onNext(new UserDetails(token.getUsername(), new ArrayList<>()));
+                    emitter.onNext(new UserDetails(token.getUsername(), new ArrayList<>())); // <6>
                     emitter.onComplete();
                 }
             } else {
-                emitter.onError(new OauthErrorResponseException(IssuingAnAccessTokenErrorCode.INVALID_GRANT, "refresh token not found", null));
+                emitter.onError(new OauthErrorResponseException(IssuingAnAccessTokenErrorCode.INVALID_GRANT, "refresh token not found", null)); // <7>
             }
         }, BackpressureStrategy.ERROR);
 

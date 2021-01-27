@@ -37,4 +37,48 @@ public class RefreshTokenEntity {
     public RefreshTokenEntity() {
     }
 
+    @NonNull
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(@NonNull Long id) {
+        this.id = id;
+    }
+
+    @NonNull
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(@NonNull String username) {
+        this.username = username;
+    }
+
+    @NonNull
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(@NonNull String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    @NonNull
+    public Boolean getRevoked() {
+        return revoked;
+    }
+
+    public void setRevoked(@NonNull Boolean revoked) {
+        this.revoked = revoked;
+    }
+
+    @NonNull
+    public Instant getDateCreated() {
+        return dateCreated;
+    }
+
+    public void setDateCreated(@NonNull Instant dateCreated) {
+        this.dateCreated = dateCreated;
+    }
 }
