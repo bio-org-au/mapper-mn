@@ -55,6 +55,7 @@ class MappingServiceImpl implements MappingService {
      * @return
      */
     Tuple2<Identifier, Match> getMatchIdentity(String uri) {
+        log.info "URI Passed to match from db -> $uri"
         withSql { Sql sql ->
             GroovyRowResult row = sql.firstRow('''
             select m.id               as m_id,

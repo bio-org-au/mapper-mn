@@ -52,7 +52,7 @@ class BrokerController {
     HttpResponse index(@PathVariable @Nullable String path, HttpRequest<?> request) {
         if (!path) return notFound("Nothing here. Please enter a valid URL. Please check" +
                 "API options here. See https://github.com/bio-org-au/mapper-mn/blob/master/doc/guide.adoc#the-broker")
-        log.info "Request to ${request.uri}"
+        log.info "Request to ${request.uri} - Path: $path"
         MatchingInfo mInfo = new MatchingInfo(request.uri, matchRegex)
         log.info "Looking for ${mInfo.path}"
 

@@ -55,7 +55,6 @@ class AuthenticationProviderUserPassword implements AuthenticationProvider {
 //        return Flowable.just(new AuthenticationFailed())
 //    }
 
-
     Publisher<AuthenticationResponse> authenticate(@Nullable HttpRequest<?> httpRequest, AuthenticationRequest<?, ?> authenticationRequest) {
         String username = authenticationRequest.getIdentity()
         log.info("Username -> ${username} requesting token")
@@ -67,7 +66,7 @@ class AuthenticationProviderUserPassword implements AuthenticationProvider {
                 emitter.onComplete()
             } else {
                 log.info "${username} caused an Auth Exception"
-                emitter.onError(new AuthenticationException(new AuthenticationFailed("Auth Failed")))
+                emitter.onError(new AuthenticationException(new AuthenticationFailed("Authentication Failed for ${username}")))
             }
         }, BackpressureStrategy.ERROR)
     }

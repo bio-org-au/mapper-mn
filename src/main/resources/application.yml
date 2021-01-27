@@ -29,7 +29,7 @@ micronaut:
         signatures:
           secret:
             generator:
-              secret: thisiscoolbutstillshouldbechanged
+              secret: TRDPt6JXkeXcCzvEQs3B
 ---
 micronaut:
   security:
@@ -39,7 +39,7 @@ micronaut:
           access-token:
             expiration: 86400
           refresh-token:
-            secret: thisiscoolbutstillshouldbechanged
+            secret: QRJyxmRjnP8zd7j46GVD
 ---
 mapper:
   brokerRegex: ^(https?://[^/]*)?/broker/(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$

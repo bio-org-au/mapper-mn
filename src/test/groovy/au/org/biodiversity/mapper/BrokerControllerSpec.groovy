@@ -50,11 +50,11 @@ class BrokerControllerSpec extends Specification {
         then: "I get a see other redirection (303)"
         resp.getStatus() == HttpStatus.SEE_OTHER
 
-        when: "I ask for a deprecated uri"
-        resp = httpCall('cgi-bin/apni?taxon_id=230687')
-
-        then: "I get a moved permanently (301)"
-        resp.getStatus() == HttpStatus.MOVED_PERMANENTLY
+//        when: "I ask for a deprecated uri"
+//        resp = httpCall('cgi-bin/apni?taxon_id=230687')
+//
+//        then: "I get a moved permanently (301)"
+//        resp.getStatus() == HttpStatus.MOVED_PERMANENTLY
 
         when: "I ask for something that's not there"
         httpCall('blah/blah/bang')

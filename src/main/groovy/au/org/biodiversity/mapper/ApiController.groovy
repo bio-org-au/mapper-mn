@@ -386,5 +386,4 @@ class ApiController {
         }
         return HttpResponse.<JsonError> notFound(new JsonError("Identifier doesn't exist."))
     }
-
 }

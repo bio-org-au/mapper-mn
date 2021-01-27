@@ -61,7 +61,7 @@ class MatchinInfoSpec extends Specification {
     void "matching info matches #url test"() {
         when:
         String matchRegex = '^(https?://[^/]*)?/?(.*?)(/api/.*?)?(\\.json|\\.xml|\\.rdf|\\.html)?$'
-        URI testUri = new URI(uri)
+        URI testUri = new URI(url)
         MatchingInfo matchingInfo = new MatchingInfo(testUri, matchRegex)
 
         then:
@@ -71,7 +71,7 @@ class MatchinInfoSpec extends Specification {
         matchingInfo.host == host
 
         where:
-        uri                                                             | host                        | path             | api                | extension
+        url                                                             | host                        | path             | api                | extension
         'http://localhost.com:8080/name/apni/2345'                      | 'http://localhost.com:8080' | 'name/apni/2345' | ''                 | ''
         'http://localhost.com:8080/name/apni/2345/api/apni-format'      | 'http://localhost.com:8080' | 'name/apni/2345' | '/api/apni-format' | ''
         'http://localhost.com:8080/name/apni/2345/api/apni-format.json' | 'http://localhost.com:8080' | 'name/apni/2345' | '/api/apni-format' | '.json'

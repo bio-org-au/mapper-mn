@@ -74,11 +74,11 @@ class ContentNegServiceSpec extends Specification {
 
         where:
         mediatype             | nameSpace | objectType    | version | expectedUrl
-        'text/html'           | 'apni'    | 'name'        | null    | 'http://apni.com/nsl/services/rest/name/apni/12345'
-        'text/json'           | 'apni'    | 'name'        | null    | 'http://apni.com/nsl/services/json/name/apni/12345'
-        'text/json'           | 'apni'    | 'treeElement' | 666     | 'http://apni.com/nsl/services/json/treeElement/666/12345'
+        'text/html'           | 'apni'    | 'name'        | null    | 'http://biodiversity.local:8080/nsl/services/rest/name/apni/12345'
+        'text/json'           | 'apni'    | 'name'        | null    | 'http://biodiversity.local:8080/nsl/services/rest/name/apni/12345'
+        'text/json'           | 'apni'    | 'treeElement' | 666     | 'http://biodiversity.local:8080/nsl/services/rest/treeElement/666/12345'
         'application/rdf+xml' | 'apni'    | 'name'        | null    | null
-        'text/xml'            | 'ausmoss' | 'name'        | null    | 'http://ausmoss.com/nsl/services/rest/name/ausmoss/12345'
+        'text/xml'            | 'ausmoss' | 'name'        | null    | 'http://moss.biodiversity.local:8080/nsl/services/rest/name/ausmoss/12345'
 
     }
 }
