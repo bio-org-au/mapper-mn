@@ -24,6 +24,21 @@ class JwtAuthenticationSpec extends Specification {
     @Client(value = "/api", configuration = TestHttpClientConfiguration.class)
     RxHttpClient client
 
+    void "On successful authentication, response has an access and a refresh token"() {
+        when: 'Login with valid credentials'
+        UsernamePasswordCredentials creds = new UsernamePasswordCredentials("TEST-services", "buy-me-a-pony")
+        HttpRequest request = HttpRequest.POST('/login', creds)
+        BearerAccessRefreshToken rsp = client.toBlocking().retrieve(request, BearerAccessRefreshToken)
+
+        then:
+        rsp.username == 'TEST-services'
+        rsp.accessToken
+        rsp.refreshToken
+
+        and: 'access token is a JWT'
+        JWTParser.parse(rsp.accessToken) instanceof SignedJWT
+    }
+
     void "Successful authentication returns Json Web token"() {
         when: 'Login endpoint is called with valid credentials'
         UsernamePasswordCredentials creds = new UsernamePasswordCredentials("TEST-services", "buy-me-a-pony")
