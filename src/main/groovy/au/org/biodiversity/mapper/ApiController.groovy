@@ -184,6 +184,7 @@ class ApiController {
 //**** Secured endpoints
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     Map addIdentifierV1(@QueryValue Optional<String> nameSpace,
@@ -221,6 +222,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}")
     Map addVersionedIdentifier(@PathVariable String nameSpace,
@@ -241,6 +243,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/add-host")
     Map addHost(@Body Map body) {
@@ -251,6 +254,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/set-preferred-host")
     Map setPreferredHost(@Body Map body) {
@@ -266,6 +270,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Post("/bulk-add-identifiers")
     HttpResponse bulkAddIdentifiers(@Body Map body, Principal principal) {
@@ -280,6 +285,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Post("/bulk-remove-identifiers")
     HttpResponse bulkRemoveIdentifiers(@Body Map body) {
@@ -294,6 +300,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/add-uri-to-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}{?preferred}")
     HttpResponse addURI(@QueryValue Optional<String> nameSpace,
@@ -314,6 +321,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Post("/move-identity")
     HttpResponse moveIdentity(@Body Map body) {
@@ -332,6 +340,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Delete("/remove-identifier-from-uri{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     HttpResponse removeIdentityFromUri(@QueryValue Optional<String> nameSpace,
@@ -354,6 +363,7 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
+//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Delete("/delete-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?reason}")
     HttpResponse deleteIdentifier(@QueryValue Optional<String> nameSpace,

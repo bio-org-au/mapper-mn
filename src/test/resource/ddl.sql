@@ -1,5 +1,7 @@
 create schema mapper;
 
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA  mapper TO nsl;
+
 create sequence mapper.mapper_sequence start with 20;
 
 create table mapper.db_version

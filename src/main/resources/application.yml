@@ -12,7 +12,6 @@ micronaut:
         paths: classpath:META-INF/swagger
         mapping: /swagger/**
   security:
-    enabled: true
     authentication: bearer
     intercept-url-map:
       - pattern: /swagger/**
@@ -20,22 +19,27 @@ micronaut:
         - isAnonymous()
     endpoints:
       login:
-        enabled: true
         path: /api/login
       oauth:
-        enabled: true
         path: /api/oauth/access_token
       loggers:
         write-sensitive: false
     token:
       jwt:
-        enabled: true
         signatures:
           secret:
             generator:
               secret: thisiscoolbutstillshouldbechanged
-            refresh-token:
-              secret: thisiscoolbutstillshouldbechanged
+---
+micronaut:
+  security:
+    token:
+      jwt:
+        generator:
+          access-token:
+            expiration: 86400
+          refresh-token:
+            secret: thisiscoolbutstillshouldbechanged
 ---
 mapper:
   brokerRegex: ^(https?://[^/]*)?/broker/(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
