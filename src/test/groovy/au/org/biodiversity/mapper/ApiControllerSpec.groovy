@@ -98,11 +98,11 @@ class ApiControllerSpec extends Specification {
         resp.link == 'http://localhost:8080/name/apni/54433'
 
         when: "I ask for preferred link that doesn't exist"
-        httpCallMap('preferred-link/name/apni/99999', null)
+        Map res = httpCallMap('preferred-link/name/apni/99999', null)
 
         then:
-        HttpClientResponseException notFound = thrown()
-        notFound.message == "Page Not Found"
+        thrown HttpClientResponseException
+        res == null
     }
 
     void "test getting links"() {
@@ -120,8 +120,7 @@ class ApiControllerSpec extends Specification {
         httpCallList('links/name/apni/99999', null)
 
         then:
-        HttpClientResponseException notFound = thrown()
-        notFound.message == "Page Not Found"
+        thrown HttpClientResponseException
     }
 
     void "test getting identity for a uri"() {
@@ -140,8 +139,7 @@ class ApiControllerSpec extends Specification {
         httpCallList('current-identity?uri=http://localhost:8080/name/apni/99999', null)
 
         then:
-        HttpClientResponseException notFound = thrown()
-        notFound.message == "Page Not Found"
+        thrown HttpClientResponseException
 
         when: "I ask for a match that has no identities, but exists"
         encodedUrl = URLEncoder.encode('http://localhost:8080/no-identifier/match', 'UTF-8')
