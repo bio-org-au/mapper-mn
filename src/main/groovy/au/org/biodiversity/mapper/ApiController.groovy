@@ -27,7 +27,7 @@ import io.micronaut.security.rules.SecurityRule
 import javax.annotation.security.PermitAll
 import javax.annotation.security.RolesAllowed
 import javax.inject.Inject
-import java.security.Principal
+import io.micronaut.security.authentication.Authentication
 
 /**
  * User: pmcneil
@@ -184,14 +184,13 @@ class ApiController {
 //**** Secured endpoints
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/add-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     Map addIdentifierV1(@QueryValue Optional<String> nameSpace,
                         @QueryValue Optional<String> objectType,
                         @QueryValue Optional<Long> idNumber,
                         @QueryValue Optional<Long> versionNumber,
-                        @QueryValue Optional<String> uri,  Principal principal) {
+                        @QueryValue Optional<String> uri,  Authentication principal) {
         log.info "/add-identifier -> $nameSpace, $objectType, $idNumber, $versionNumber -> $uri"
         Identifier identifier = mappingService.addIdentifier(nameSpace.get(),
                 objectType.get(),
@@ -209,7 +208,7 @@ class ApiController {
                                   @PathVariable String objectType,
                                   @PathVariable Long idNumber,
                                   @Body Map body,
-                                  Principal principal) {
+                                  Authentication principal) {
         String uri = body.uri
         log.info "Add $objectType/$nameSpace/$idNumber (uri: $uri)"
         Identifier identifier = mappingService.addIdentifier(nameSpace,
@@ -222,14 +221,13 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/add/{nameSpace}/{objectType}/{versionNumber}/{idNumber}")
     Map addVersionedIdentifier(@PathVariable String nameSpace,
                                @PathVariable String objectType,
                                @PathVariable Long idNumber,
                                @PathVariable Long versionNumber,
-                               @Body Map body, Principal principal
+                               @Body Map body, Authentication principal
     ) {
         String uri = body.uri
         log.info "Add $objectType/$idNumber/$versionNumber -> namespace: $nameSpace, uri:$uri"
@@ -243,7 +241,6 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/add-host")
     Map addHost(@Body Map body) {
@@ -254,7 +251,6 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/set-preferred-host")
     Map setPreferredHost(@Body Map body) {
@@ -270,10 +266,9 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Post("/bulk-add-identifiers")
-    HttpResponse bulkAddIdentifiers(@Body Map body, Principal principal) {
+    HttpResponse bulkAddIdentifiers(@Body Map body, Authentication principal) {
         Set<Map> identifiers = body.identifiers as Set<Map>
         log.info("/bulk-add-identifiers -> Adding ${identifiers.size().toString()} identifier[s]")
         if (mappingService.bulkAddIdentifiers(identifiers, principal.getName())) {
@@ -285,7 +280,6 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Post("/bulk-remove-identifiers")
     HttpResponse bulkRemoveIdentifiers(@Body Map body) {
@@ -300,7 +294,6 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Put("/add-uri-to-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}{?preferred}")
     HttpResponse addURI(@QueryValue Optional<String> nameSpace,
@@ -308,7 +301,7 @@ class ApiController {
                         @QueryValue Optional<Long> idNumber,
                         @QueryValue Optional<Long> versionNumber,
                         @QueryValue Optional<String> uri,
-                        @QueryValue Optional<Boolean> preferred, Principal principal) {
+                        @QueryValue Optional<Boolean> preferred, Authentication principal) {
         Identifier identifier = mappingService.findIdentifier(nameSpace.get(), objectType.get(), idNumber.get(), versionNumber.orElse(null))
         if (identifier) {
             Match match = mappingService.addMatch(uri.get(), principal.getName())
@@ -321,7 +314,6 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Post("/move-identity")
     HttpResponse moveIdentity(@Body Map body) {
@@ -340,7 +332,6 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Delete("/remove-identifier-from-uri{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?uri}")
     HttpResponse removeIdentityFromUri(@QueryValue Optional<String> nameSpace,
@@ -363,7 +354,6 @@ class ApiController {
     }
 
     @RolesAllowed('admin')
-//    @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     @Delete("/delete-identifier{?objectType}{?nameSpace}{?idNumber}{?versionNumber}{?reason}")
     HttpResponse deleteIdentifier(@QueryValue Optional<String> nameSpace,

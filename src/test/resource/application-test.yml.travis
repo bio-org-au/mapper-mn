@@ -10,4 +10,3 @@ datasources:
     autoCommit: false
     schema: mapper
     socketTimeout: 30
-

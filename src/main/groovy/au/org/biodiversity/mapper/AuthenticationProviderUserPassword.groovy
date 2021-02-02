@@ -44,17 +44,6 @@ class AuthenticationProviderUserPassword implements AuthenticationProvider {
     Map authMap
 
     @Override
-//    Publisher<AuthenticationResponse> authenticate(HttpRequest req, AuthenticationRequest authenticationRequest) {
-//        String username = authenticationRequest.getIdentity()
-//        log.info("Username -> ${username} requesting token")
-//        Map authData = authMap[username] as Map
-//        if ( authData && authenticationRequest.getSecret().equals(authData.secret) ) {
-//            return Flowable.just(new UserDetails((String) authenticationRequest.getIdentity(), authData.roles as List))
-//        }
-//        log.info "${username} caused an Auth Exception"
-//        return Flowable.just(new AuthenticationFailed())
-//    }
-
     Publisher<AuthenticationResponse> authenticate(@Nullable HttpRequest<?> httpRequest, AuthenticationRequest<?, ?> authenticationRequest) {
         String username = authenticationRequest.getIdentity()
         log.info("Username -> ${username} requesting token")

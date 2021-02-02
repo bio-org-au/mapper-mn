@@ -29,7 +29,7 @@ micronaut:
         signatures:
           secret:
             generator:
-              secret: TRDPt6JXkeXcCzvEQs3B
+              secret: ${mapper.jwt.refSecret:TRDPt6JXkeXcCzvEQs3BKJBkshdbkjhsksjdKJB}
 ---
 micronaut:
   security:
@@ -39,7 +39,7 @@ micronaut:
           access-token:
             expiration: 86400
           refresh-token:
-            secret: QRJyxmRjnP8zd7j46GVD
+            secret: ${mapper.jwt.refSecret:QRJyxmRjnP8zd7j46GVDlaksbLJIEGDblkjsfdjk}
 ---
 mapper:
   brokerRegex: ^(https?://[^/]*)?/broker/(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$
@@ -54,4 +54,3 @@ datasources:
     autoCommit: false
     schema: mapper
     socketTimeout: 30
-

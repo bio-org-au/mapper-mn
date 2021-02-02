@@ -7,7 +7,6 @@ import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.RxHttpClient
 import io.micronaut.http.client.annotation.Client
-import io.micronaut.runtime.server.EmbeddedServer
 import io.micronaut.security.authentication.UsernamePasswordCredentials
 import io.micronaut.security.token.jwt.render.BearerAccessRefreshToken
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
@@ -17,56 +16,50 @@ import javax.inject.Inject
 
 @MicronautTest
 class JwtAuthenticationSpec extends Specification {
-    @Inject
-    EmbeddedServer embeddedServer
 
     @Inject
-    @Client(value = "/api", configuration = TestHttpClientConfiguration.class)
+    @Client('/')
     RxHttpClient client
+    @Inject ApiController controller
 
-    void "On successful authentication, response has an access and a refresh token"() {
-        when: 'Login with valid credentials'
-        UsernamePasswordCredentials creds = new UsernamePasswordCredentials("TEST-services", "buy-me-a-pony")
-        HttpRequest request = HttpRequest.POST('/login', creds)
-        BearerAccessRefreshToken rsp = client.toBlocking().retrieve(request, BearerAccessRefreshToken)
+    void "Check if accessToken exists in the response from /login endpoint"() {
+        when:
+        UsernamePasswordCredentials adminUserCreds = new UsernamePasswordCredentials("TEST-services", "buy-me-a-pony")
+        HttpRequest loginRequest = HttpRequest.POST('/api/login', adminUserCreds)
+        HttpResponse<BearerAccessRefreshToken> response = client.toBlocking().exchange(loginRequest, BearerAccessRefreshToken)
+        BearerAccessRefreshToken token = response?.body()
 
-        then:
-        rsp.username == 'TEST-services'
-        rsp.accessToken
-        rsp.refreshToken
-
-        and: 'access token is a JWT'
-        JWTParser.parse(rsp.accessToken) instanceof SignedJWT
+        then :
+        response.status == HttpStatus.OK
+        token.accessToken
+        token.username == 'TEST-services'
     }
 
-    void "Successful authentication returns Json Web token"() {
-        when: 'Login endpoint is called with valid credentials'
+    void "Make a successful request to secured endpoint"() {
+        when:
         UsernamePasswordCredentials creds = new UsernamePasswordCredentials("TEST-services", "buy-me-a-pony")
-        HttpRequest request = HttpRequest.POST('/login', creds)
-        HttpResponse<BearerAccessRefreshToken> rsp = client.toBlocking().exchange(request, BearerAccessRefreshToken)
+        HttpRequest request = HttpRequest.POST('/api/login', creds)
+        HttpResponse response = client.toBlocking().exchange(request, BearerAccessRefreshToken)
+        String accessToken = response.body().accessToken
+        String refreshToken = response.body().refreshToken
+        println "Ref Tok: $refreshToken"
 
-        then: 'the endpoint can be accessed'
-        rsp.status == HttpStatus.OK
+        then:
+        JWTParser.parse(accessToken) instanceof SignedJWT
 
-//        when:
-//        BearerAccessRefreshToken bearerAccessRefreshToken = rsp.body()
-//
-//        then:
-//        bearerAccessRefreshToken.username == 'TEST-services'
-//        bearerAccessRefreshToken.accessToken
-//
-//        and: 'the access token is a signed JWT'
-//        JWTParser.parse(bearerAccessRefreshToken.accessToken) instanceof SignedJWT
-//
-//        when: 'passing the access token as in the Authorization HTTP Header with the prefix Bearer allows the user to access a secured endpoint'
-//        String accessToken = bearerAccessRefreshToken.accessToken
-//        HttpRequest requestWithAuthorization = HttpRequest.GET('/' )
-//                .accept(MediaType.TEXT_PLAIN)
-//                .bearerAuth(accessToken)
-//        HttpResponse<String> response = client.toBlocking().exchange(requestWithAuthorization, String)
-//
-//        then:
-//        response.status == HttpStatus.OK
-//        response.body() == 'TEST-services'
+        when: "Gen a new access token using refresh token"
+        String data = '{"grant_type":"refresh_token", "refresh_token": "' + refreshToken + '"}'
+        HttpRequest reqToOauthAccessToken = HttpRequest
+                .POST('/api/oauth/access_token', data)
+                .contentType(MediaType.APPLICATION_JSON)
+        println "Data: $data"
+        HttpResponse<BearerAccessRefreshToken> refreshRes =
+                client
+                        .toBlocking()
+                        .retrieve(reqToOauthAccessToken, BearerAccessRefreshToken) as HttpResponse<BearerAccessRefreshToken>
+
+        then:
+        println "Refresh Response: $refreshRes.properties"
+        refreshRes
     }
 }
