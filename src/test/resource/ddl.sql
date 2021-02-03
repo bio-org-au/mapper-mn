@@ -1,7 +1,5 @@
 create schema mapper;
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA  mapper TO nsl;
-
 create sequence mapper.mapper_sequence start with 20;
 
 create table mapper.db_version
@@ -103,3 +101,6 @@ create table mapper.match_host
 create index match_host_index
     on mapper.match_host (match_hosts_id);
 
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA mapper TO nsl;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA mapper TO nsl;
+GRANT USAGE ON SCHEMA mapper TO nsl;

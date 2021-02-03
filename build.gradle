@@ -24,7 +24,6 @@ dependencies {
     annotationProcessor "io.micronaut.security:micronaut-security-annotations"
     annotationProcessor "io.micronaut:micronaut-inject-java"
     annotationProcessor "io.micronaut:micronaut-validation"
-//  annotationProcessor "io.micronaut:micronaut-security"
     compile 'org.codehaus.groovy:groovy-sql:2.5.2'
     compileOnly "io.micronaut.openapi:micronaut-openapi"
     compileOnly platform("io.micronaut:micronaut-bom:$micronautVersion")
@@ -32,7 +31,6 @@ dependencies {
     implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
     implementation("io.micronaut.groovy:micronaut-runtime-groovy")
     implementation "io.micronaut:micronaut-validation"
-//  implementation "io.micronaut:micronaut-http-server-netty"
     implementation("io.micronaut.servlet:micronaut-http-server-tomcat:1.0.2")
     implementation "io.micronaut:micronaut-http-client"
     implementation "io.swagger.core.v3:swagger-annotations"

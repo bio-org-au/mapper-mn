@@ -110,7 +110,7 @@ class ApiControllerSpec extends Specification {
         List<Map> resp = httpCallList('links/name/apni/54433', null)
 
         then:
-        resp.size() == 2
+        resp.size() == 4
         resp[0].link == 'http://localhost:8080/name/apni/54433'
         resp[0].resourceCount == 1
         resp[0].preferred == true
@@ -277,7 +277,7 @@ class ApiControllerSpec extends Specification {
 
         then: "not found exception"
         HttpClientResponseException notFound = thrown()
-        notFound.message == "Page Not Found"
+        notFound.status == HttpStatus.NOT_FOUND
 
         cleanup:
         httpPutCallMap('/set-preferred-host', [hostName: 'localhost:8080'], token)
