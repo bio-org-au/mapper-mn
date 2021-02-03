@@ -100,7 +100,3 @@ create table mapper.match_host
 
 create index match_host_index
     on mapper.match_host (match_hosts_id);
-
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA mapper TO nsl;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA mapper TO nsl;
-GRANT USAGE ON SCHEMA mapper TO nsl;
