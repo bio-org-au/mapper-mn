@@ -21,6 +21,7 @@ import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.MediaType
+import io.micronaut.http.annotation.Consumes
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
@@ -47,7 +48,7 @@ class BrokerController {
     String matchRegex
 
     @PermitAll
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     @Get("/{/path:.*}")
     HttpResponse index(@PathVariable @Nullable String path, HttpRequest<?> request) {
         if (!path) return notFound("Nothing here. Please enter a valid URL. Please check" +

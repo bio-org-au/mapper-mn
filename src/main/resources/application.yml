@@ -22,8 +22,6 @@ micronaut:
         path: /api/login
       oauth:
         path: /api/oauth/access_token
-      loggers:
-        write-sensitive: false
     token:
       jwt:
         signatures:
