@@ -14,6 +14,9 @@ micronaut:
   security:
     authentication: bearer
     intercept-url-map:
+      - pattern: /**
+        access:
+        - isAnonymous()
       - pattern: /swagger/**
         access:
         - isAnonymous()
