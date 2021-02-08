@@ -41,7 +41,7 @@ class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
     @Property(name = 'mapper.auth')
     Map authMap
 
-    static String filename = 'refresh-tokens.txt'
+    static String filename = System.getProperty("user.home") + '/.nsl/refresh-tokens.txt'
     File f = new File(filename)
 
     CustomRefreshTokenPersistence() {
@@ -62,7 +62,7 @@ class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
                 allTokens << newToken
             }
             writeRefreshToken(allTokens)
-            log.info "Added new token $newToken and saved to the file system"
+            log.info "Added new token $newToken and saved to ${f.absolutePath}"
         }
     }
 
