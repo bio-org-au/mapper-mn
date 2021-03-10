@@ -54,8 +54,6 @@ and we have a configuration problem. (all resolvable URLs should be pointed at /
 
 The mapper has a JSON API, this is the only HTML page.
 You can find mapper statistics at "api/stats"
-Connected to DB ${dbUrl}
-Config files ${configFiles}
 """)
     }
 }

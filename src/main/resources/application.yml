@@ -38,7 +38,7 @@ micronaut:
       jwt:
         generator:
           access-token:
-            expiration: 86400
+            expiration: 60
           refresh-token:
             secret: ${mapper.jwt.refSecret:QRJyxmRjnP8zd7j46GVDlaksbLJIEGDblkjsfdjk}
 ---

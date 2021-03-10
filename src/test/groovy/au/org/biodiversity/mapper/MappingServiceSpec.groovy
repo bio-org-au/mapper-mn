@@ -15,7 +15,7 @@
 */
 package au.org.biodiversity.mapper
 
-import io.micronaut.test.annotation.MicronautTest
+import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import spock.lang.*
 
 import javax.inject.Inject
@@ -54,6 +54,7 @@ class MappingServiceSpec extends Specification {
         'cgi-bin/apni?taxon_id=230687'       | true       | 54433     | false   | null
         'name/apni/54433'                    | false      | 54433     | false   | null
         'name/apni/148297'                   | false      | 148297    | true    | 'Name has not been applied to Australian flora'
+//        'author/apni/51391959'               | false      | 51391959  | false   | null
     }
 
     void "test match and Identity when there is no match"() {
