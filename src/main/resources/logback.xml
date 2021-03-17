@@ -9,7 +9,7 @@
         </rollingPolicy>
         <encoder>
             <charset>utf-8</charset>
-            <pattern>%date{yyyy-MM-dd HH:mm:ss} [%0.5thread] %boldYellow(%-5level) [%logger{20}] - %msg%n
+            <pattern>%boldMagenta(%date{yyyy-MM-dd HH:mm:ss}) [%0.5thread] %boldYellow(%-5level) [%logger{20}] - %msg%n
             </pattern>
         </encoder>
     </appender>
@@ -25,7 +25,14 @@
     </appender>
 
     <root level="info">
-        <appender-ref ref="STDOUT"/>
+        <if condition='property("MICRONAUT_ENVIRONMENTS").contains("local")'>
+            <then>
+                <appender-ref ref="STDOUT"/>
+            </then>
+            <else>
+                <appender-ref ref="FILE"/>
+            </else>
+        </if>
     </root>
     <logger name="io.micronaut.http.client" level="INFO"/>
     <logger name="io.micronaut.security" level="INFO"/>
