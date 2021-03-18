@@ -74,7 +74,7 @@ class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
             String refToken = ''
             for (item in allTokens) {
                 if (item) {
-                    def (un, rt) = item.split('-->')
+                    def (un, rt) = item.trim().split('-->')
                     if (rt == refreshToken) {
                         username = un
                         refToken = rt
@@ -83,6 +83,7 @@ class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
             }
             if (refToken) {
                 Map authData = authMap[username] as Map
+                log.debug("Roles for user: '$username' are: ${authData.roles}")
                 emitter.onNext(new UserDetails(username, authData.roles as List))
                 emitter.onComplete()
             } else {
@@ -100,6 +101,7 @@ class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
     List readStoredRefreshTokens() {
         String fileContent = f.getText('UTF-8')
         List tokens = fileContent.tokenize(',[]')
+        tokens = tokens*.trim()
         return tokens
     }
 }
