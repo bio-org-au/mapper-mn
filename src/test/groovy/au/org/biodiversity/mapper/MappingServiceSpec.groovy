@@ -14,8 +14,7 @@
     limitations under the License.
 */
 package au.org.biodiversity.mapper
-
-import io.micronaut.test.extensions.spock.annotation.MicronautTest
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import spock.lang.*
 
 import javax.inject.Inject

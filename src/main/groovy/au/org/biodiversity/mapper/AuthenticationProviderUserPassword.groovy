@@ -23,11 +23,11 @@ import io.micronaut.security.authentication.AuthenticationFailed
 import io.micronaut.security.authentication.AuthenticationProvider
 import io.micronaut.security.authentication.AuthenticationRequest
 import io.micronaut.security.authentication.AuthenticationResponse
-import io.micronaut.security.authentication.UserDetails
-import io.reactivex.Flowable
+import io.micronaut.security.authentication.ServerAuthentication
+import io.reactivex.rxjava3.core.Flowable
 import org.reactivestreams.Publisher
 import groovy.util.logging.Slf4j
-import io.reactivex.BackpressureStrategy
+import io.reactivex.rxjava3.core.BackpressureStrategy
 
 import javax.inject.Singleton
 
@@ -38,7 +38,7 @@ import javax.inject.Singleton
  */
 @Slf4j
 @Singleton
-class AuthenticationProviderUserPassword implements AuthenticationProvider {
+class AuthenticationProviderUserPassword implements AuthenticationProvider<HttpRequest<?>> {
 
     @Property(name = 'mapper.auth')
     Map authMap
@@ -51,7 +51,7 @@ class AuthenticationProviderUserPassword implements AuthenticationProvider {
         Flowable.create(emitter -> {
             if (authData && authenticationRequest.getIdentity() == username
                     && authenticationRequest.getSecret() == authData.secret) {
-                emitter.onNext(new UserDetails(username, authData.roles as List))
+                emitter.onNext(new ServerAuthentication(username, authData.roles as List))
                 emitter.onComplete()
             } else {
                 log.info "${username} caused an Auth Exception"

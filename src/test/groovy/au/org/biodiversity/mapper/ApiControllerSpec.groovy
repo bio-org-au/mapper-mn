@@ -24,11 +24,11 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.runtime.server.EmbeddedServer
-import io.micronaut.security.token.jwt.endpoints.TokenRefreshRequest
-import io.micronaut.security.token.jwt.render.AccessRefreshToken
-import io.micronaut.security.token.jwt.render.BearerAccessRefreshToken
-import io.micronaut.test.annotation.MicronautTest
-import io.reactivex.Flowable
+import io.micronaut.security.endpoints.TokenRefreshRequest
+import io.micronaut.security.token.render.AccessRefreshToken
+import io.micronaut.security.token.render.BearerAccessRefreshToken
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import io.reactivex.rxjava3.core.Flowable;
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Specification
@@ -60,7 +60,7 @@ class ApiControllerSpec extends Specification {
 
     void "test auth"() {
         when:
-        HttpRequest request = POST('/login', '{"username":"TEST-services","password":"buy-me-a-pony"}')
+        HttpRequest request = HttpRequest.POST('/login', '{"username":"TEST-services","password":"buy-me-a-pony"}')
         HttpResponse<BearerAccessRefreshToken> rsp = client.toBlocking().exchange(request, BearerAccessRefreshToken)
 
 
@@ -73,7 +73,7 @@ class ApiControllerSpec extends Specification {
         String accessToken = rsp.body().accessToken
 
         HttpResponse<AccessRefreshToken> response = client.toBlocking().exchange(
-                POST('/oauth/access_token', new TokenRefreshRequest("refresh_token", refreshToken)),
+                HttpRequest.POST('/oauth/access_token', new TokenRefreshRequest("refresh_token", refreshToken)),
                 AccessRefreshToken)
 
         then:
@@ -515,7 +515,7 @@ class ApiControllerSpec extends Specification {
     //*** helpers ***
 
     private String login() {
-        HttpRequest request = POST('/login', '{"username":"TEST-services","password":"buy-me-a-pony"}')
+        HttpRequest request = HttpRequest.POST('/login', '{"username":"TEST-services","password":"buy-me-a-pony"}')
         HttpResponse<BearerAccessRefreshToken> rsp = client.toBlocking().exchange(request, BearerAccessRefreshToken)
         assert rsp.status == HttpStatus.OK
         return rsp.body().accessToken
@@ -523,7 +523,7 @@ class ApiControllerSpec extends Specification {
 
     private Map httpPostCallMap(String uri, Map body, String accessToken) {
         Flowable<HttpResponse<Map>> call = client.exchange(
-                POST(uri, body)
+                HttpRequest.POST(uri, body)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
                 , Map.class
         )
@@ -532,7 +532,7 @@ class ApiControllerSpec extends Specification {
 
     private Map httpDeleteCallMap(String uri, Map body, String accessToken) {
         Flowable<Map> call = client.retrieve(
-                DELETE(uri, body)
+                HttpRequest.DELETE(uri, body)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
                 , Map.class
         )
@@ -541,7 +541,7 @@ class ApiControllerSpec extends Specification {
 
     private Map httpPutCallMap(String uri, Map body, String accessToken) {
         Flowable<Map> call = client.retrieve(
-                PUT(uri, body)
+                HttpRequest.PUT(uri, body)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
                 , Map.class
         )
@@ -550,7 +550,7 @@ class ApiControllerSpec extends Specification {
 
     private Map httpCallMap(String uri, String accessToken) {
         Flowable<Map> call = client.retrieve(
-                GET(uri)
+                HttpRequest.GET(uri)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
                 , Map.class
         )
@@ -559,7 +559,7 @@ class ApiControllerSpec extends Specification {
 
     private List<Map> httpCallList(String uri, String accessToken) {
         Flowable<List<Map>> call = client.retrieve(
-                GET(uri)
+                HttpRequest.GET(uri)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
                 , List.class
         )

@@ -27,8 +27,8 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Produces
 
-import javax.annotation.Nullable
-import javax.annotation.security.PermitAll
+import jakarta.annotation.Nullable
+import jakarta.annotation.security.PermitAll
 import javax.inject.Inject
 
 /**

@@ -18,14 +18,17 @@ package au.org.biodiversity.mapper
 import groovy.util.logging.Slf4j
 import io.micronaut.context.annotation.Property
 import io.micronaut.runtime.event.annotation.EventListener
-import io.micronaut.security.authentication.UserDetails
+import io.micronaut.security.authentication.ServerAuthentication
+
+//import io.micronaut.security.authentication.UserDetails
 import io.micronaut.security.errors.IssuingAnAccessTokenErrorCode
 import io.micronaut.security.errors.OauthErrorResponseException
 import io.micronaut.security.token.event.RefreshTokenGeneratedEvent
 import io.micronaut.security.token.refresh.RefreshTokenPersistence
-import io.reactivex.BackpressureStrategy
-import io.reactivex.Flowable
+import io.reactivex.rxjava3.core.BackpressureStrategy
+import io.reactivex.rxjava3.core.Flowable
 import org.reactivestreams.Publisher
+import io.micronaut.security.authentication.Authentication;
 
 import javax.inject.Singleton
 
@@ -51,6 +54,7 @@ class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
     @Override
     @EventListener
     void persistToken(RefreshTokenGeneratedEvent event) {
+        event.getUserDetails()
         if(event && event.getRefreshToken() && event.getUserDetails().getUsername()) {
             List allTokens = readStoredRefreshTokens()
             String username = event.getUserDetails().getUsername()
@@ -67,7 +71,7 @@ class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
     }
 
     @Override
-    Publisher<UserDetails> getUserDetails(String refreshToken) {
+    Publisher<Authentication> getAuthentication(String refreshToken) {
         return Flowable.create(emitter -> {
             List allTokens = readStoredRefreshTokens()
             String username = ''
@@ -84,7 +88,9 @@ class CustomRefreshTokenPersistence implements RefreshTokenPersistence {
             if (refToken) {
                 Map authData = authMap[username] as Map
                 log.debug("Roles for user: '$username' are: ${authData.roles}")
-                emitter.onNext(new UserDetails(username, authData.roles as List))
+                emitter.onNext(
+                        new ServerAuthentication(username, authData.roles as List)
+                )
                 emitter.onComplete()
             } else {
                 emitter.onError(new OauthErrorResponseException(

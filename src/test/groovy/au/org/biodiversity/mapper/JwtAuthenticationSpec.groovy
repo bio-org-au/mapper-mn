@@ -6,11 +6,12 @@ import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.MediaType
-import io.micronaut.http.client.RxHttpClient
+import io.micronaut.rxjava3.http.client.Rx3HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.security.authentication.UsernamePasswordCredentials
-import io.micronaut.security.token.jwt.render.BearerAccessRefreshToken
-import io.micronaut.test.extensions.spock.annotation.MicronautTest
+import io.micronaut.security.token.render.BearerAccessRefreshToken
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -20,7 +21,7 @@ class JwtAuthenticationSpec extends Specification {
 
     @Inject
     @Client('/')
-    RxHttpClient client
+    Rx3HttpClient client
     @Inject ApiController controller
 
     void "Check if accessToken exists in the response from /login endpoint"() {

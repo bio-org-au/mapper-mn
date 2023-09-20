@@ -7,6 +7,8 @@ micronaut:
     netty.log-level: DEBUG
     thread-selection: AUTO
   router:
+    versioning:
+      enabled: false
     static-resources:
       swagger:
         paths: classpath:META-INF/swagger
@@ -15,6 +17,7 @@ micronaut:
     authentication: bearer
     intercept-url-map:
       - pattern: /**
+        http-method: GET
         access:
         - isAnonymous()
       - pattern: /swagger/**
@@ -26,21 +29,19 @@ micronaut:
       oauth:
         path: /api/oauth/access_token
     token:
-      jwt:
-        signatures:
-          secret:
-            generator:
-              secret: ${mapper.jwt.refSecret:TRDPt6JXkeXcCzvEQs3BKJBkshdbkjhsksjdKJB}
+      signatures:
+        secret:
+          generator:
+            secret: ${mapper.jwt.refSecret:TRDPt6JXkeXcCzvEQs3BKJBkshdbkjhsksjdKJB}
 ---
 micronaut:
   security:
     token:
-      jwt:
-        generator:
-          access-token:
-            expiration: 3600
-          refresh-token:
-            secret: ${mapper.jwt.refSecret:QRJyxmRjnP8zd7j46GVDlaksbLJIEGDblkjsfdjk}
+      generator:
+        access-token:
+          expiration: 3600
+        refresh-token:
+          secret: ${mapper.jwt.refSecret:QRJyxmRjnP8zd7j46GVDlaksbLJIEGDblkjsfdjk}
 ---
 mapper:
   brokerRegex: ^(https?://[^/]*)?/broker/(.*?)(/api/.*?)?(\.json|\.xml|\.rdf|\.html)?$

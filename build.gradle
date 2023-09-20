@@ -1,6 +1,8 @@
 plugins {
     id "groovy"
-    id "com.github.johnrengelman.shadow" version "5.0.0"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.micronaut.application") version "4.0.3"
+    id("io.micronaut.aot") version "4.0.3"
     id "war"
     id "application"
 }
@@ -20,36 +22,81 @@ configurations {
 }
 
 dependencies {
-    annotationProcessor platform("io.micronaut:micronaut-bom:$micronautVersion")
+    annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
+    implementation("io.micronaut.serde:micronaut-serde-jackson")
+//    runtimeOnly("ch.qos.logback:logback-core:1.2.7")
+    runtimeOnly("ch.qos.logback:logback-classic")
+    testImplementation("io.micronaut:micronaut-http-client")
+
+    runtimeOnly("org.yaml:snakeyaml")
+//    implementation 'javax.annotation:javax.annotation-api:1.3.2'
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'com.github.spotbugs:spotbugs-annotations:4.7.3'
+
+    implementation("io.micronaut.rxjava3:micronaut-rxjava3")
+    implementation("io.micronaut.rxjava3:micronaut-rxjava3-http-client")
+
+
+//    annotationProcessor platform("io.micronaut:micronaut-bom:$micronautVersion")
     annotationProcessor "io.micronaut.security:micronaut-security-annotations"
     annotationProcessor "io.micronaut:micronaut-inject-java"
-    annotationProcessor "io.micronaut:micronaut-validation"
-    compile 'org.codehaus.groovy:groovy-sql:2.5.2'
-    compileOnly "io.micronaut.openapi:micronaut-openapi"
-    compileOnly platform("io.micronaut:micronaut-bom:$micronautVersion")
-    compileOnly "io.micronaut:micronaut-inject-groovy"
-    implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
-    implementation("io.micronaut.groovy:micronaut-runtime-groovy")
-    implementation "io.micronaut:micronaut-validation"
-    implementation("io.micronaut.servlet:micronaut-http-server-tomcat:1.0.2")
-    implementation "io.micronaut:micronaut-http-client"
+//    annotationProcessor "io.micronaut:micronaut-validation"
+    implementation 'org.apache.groovy:groovy-sql:4.0.15'
+
+//    implementation 'org.codehaus.groovy:groovy-sql:3.0.19'
+//    implementation "io.micronaut.openapi:micronaut-openapi"
+//    implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
+    implementation "io.micronaut:micronaut-inject-groovy"
+//    implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
+    implementation("io.micronaut.groovy:micronaut-runtime-groovy") // needed for groovy configuration
+//    implementation "io.micronaut:micronaut-validation"
+//    implementation("io.micronaut.servlet:micronaut-http-server-tomcat:1.0.2")
+//    implementation "io.micronaut:micronaut-http-client"
     implementation "io.swagger.core.v3:swagger-annotations"
     implementation "io.micronaut.security:micronaut-security-jwt"
-    implementation("io.micronaut.servlet:micronaut-servlet-engine:1.0.2")
-    implementation("org.codehaus.janino:janino:3.1.0")
-    runtime 'io.micronaut.sql:micronaut-jdbc-tomcat'
-    runtime 'org.postgresql:postgresql:42.6.0'
-    runtimeOnly "ch.qos.logback:logback-classic:1.2.3"
-    runtime("io.micronaut:micronaut-core:2.2.0")
+//    implementation("io.micronaut.servlet:micronaut-servlet-engine:1.0.2")
+//    implementation("org.codehaus.janino:janino:3.1.0")
+    implementation 'io.micronaut.sql:micronaut-jdbc-tomcat'
+    implementation 'org.postgresql:postgresql:42.6.0'
+    implementation("io.micronaut:micronaut-core:2.2.0")
 
-    testCompileOnly platform("io.micronaut:micronaut-bom:$micronautVersion")
+//    testImplementation platform("io.micronaut:micronaut-bom:$micronautVersion")
     testImplementation("org.spockframework:spock-core") {
         exclude group: "org.codehaus.groovy", module: "groovy-all"
     }
     testImplementation "io.micronaut:micronaut-inject-groovy"
-    testImplementation "io.micronaut.test:micronaut-test-spock"
-    testImplementation "io.micronaut.test:micronaut-test-junit5"
-    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.5.0"
+//    testImplementation "io.micronaut.test:micronaut-test-spock"
+//    testImplementation "io.micronaut.test:micronaut-test-junit5"
+//    testImplementation "org.junit.vintage:junit-vintage-engine:5.5.0"
+}
+
+application {
+    mainClass.set("au.org.biodiversity.mapper.Application")
+}
+java {
+    sourceCompatibility = JavaVersion.toVersion("17")
+    targetCompatibility = JavaVersion.toVersion("17")
+}
+
+graalvmNative.toolchainDetection = false
+micronaut {
+    runtime("netty")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("example.micronaut.*")
+    }
+    aot {
+        // Please review carefully the optimizations enabled below
+        // Check https://micronaut-projects.github.io/micronaut-aot/latest/guide/ for more details
+        optimizeServiceLoading = false
+        convertYamlToJava = false
+        precomputeOperations = true
+        cacheEnvironment = true
+        optimizeClassLoading = true
+        deduceEnvironment = true
+        optimizeNetty = true
+    }
 }
 
 test.classpath += configurations.developmentOnly

@@ -22,7 +22,7 @@ import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Produces
 
-import javax.annotation.security.PermitAll
+import jakarta.annotation.security.PermitAll
 import javax.inject.Inject
 import javax.sql.DataSource
 

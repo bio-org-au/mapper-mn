@@ -15,14 +15,15 @@
 */
 package au.org.biodiversity.mapper
 
+import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.runtime.server.EmbeddedServer
-import io.micronaut.test.annotation.MicronautTest
-import io.reactivex.Flowable
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import io.reactivex.rxjava3.core.Flowable;
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -86,7 +87,7 @@ class BrokerControllerSpec extends Specification {
 
     private HttpResponse<String> httpCall(String uri){
         Flowable<HttpResponse<String>> call = client.exchange(
-                GET(uri), String.class
+                HttpRequest.GET(uri), String.class
         )
         return call.blockingFirst()
     }
