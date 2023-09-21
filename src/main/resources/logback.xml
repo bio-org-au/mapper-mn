@@ -1,40 +1,15 @@
 <configuration>
-    <property name="LOG_FILE" value="mn-mapper" />
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/logs/${LOG_FILE}.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${user.home}/logs/nsl-${LOG_FILE}-%d{yyyy-MM-dd}.zip</fileNamePattern>
-            <maxHistory>90</maxHistory>
-            <totalSizeCap>3GB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <charset>utf-8</charset>
-            <pattern>%boldMagenta(%date{yyyy-MM-dd HH:mm:ss}) [%0.5thread] %boldYellow(%-5level) [%logger{20}] - %msg%n
-            </pattern>
-        </encoder>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n
+            </Pattern>
+        </layout>
     </appender>
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <withJansi>true</withJansi>
-        <!-- encoders are assigned the type
-             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-        <encoder>
-            <pattern>%boldMagenta(%date{yyyy-MM-dd HH:mm:ss}) %white([%0.5thread]) %boldYellow(%-5level) %magenta(%logger{20}) - %msg%n
-            </pattern>
-        </encoder>
-    </appender>
-
-    <root level="info">
-        <if condition='property("MICRONAUT_ENVIRONMENTS").contains("local")'>
-            <then>
-                <appender-ref ref="STDOUT"/>
-            </then>
-            <else>
-                <appender-ref ref="FILE"/>
-            </else>
-        </if>
+    <root level="debug">
+        <appender-ref ref="CONSOLE"/>
     </root>
-    <logger name="io.micronaut.http.client" level="INFO"/>
-    <logger name="io.micronaut.security" level="INFO"/>
-<!--    <logger name="io.micronaut.servlet.http.ServletHttpHandler" level="TRACE"></logger>-->
+
 </configuration>

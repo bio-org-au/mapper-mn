@@ -1,6 +1,6 @@
 plugins {
     id "groovy"
-    id "com.github.johnrengelman.shadow" version "5.0.0"
+    id "com.github.johnrengelman.shadow" version "7.1.2"
     id "war"
     id "application"
 }
@@ -31,16 +31,16 @@ dependencies {
     implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
     implementation("io.micronaut.groovy:micronaut-runtime-groovy")
     implementation "io.micronaut:micronaut-validation"
-    implementation("io.micronaut.servlet:micronaut-http-server-tomcat:1.0.2")
+    implementation("io.micronaut.servlet:micronaut-http-server-tomcat")
     implementation "io.micronaut:micronaut-http-client"
     implementation "io.swagger.core.v3:swagger-annotations"
     implementation "io.micronaut.security:micronaut-security-jwt"
-    implementation("io.micronaut.servlet:micronaut-servlet-engine:1.0.2")
+    implementation("io.micronaut.servlet:micronaut-servlet-engine")
     implementation("org.codehaus.janino:janino:3.1.0")
     implementation 'io.micronaut.sql:micronaut-jdbc-tomcat'
     implementation 'org.postgresql:postgresql:42.6.0'
     implementation "ch.qos.logback:logback-classic:1.2.3"
-    implementation("io.micronaut:micronaut-core:2.2.0")
+    implementation("io.micronaut:micronaut-core")
 
     testImplementation platform("io.micronaut:micronaut-bom:$micronautVersion")
     testImplementation("org.spockframework:spock-core") {
