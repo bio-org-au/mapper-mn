@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.info.Info
         )
 )
 
-@CompileStatic
+//@CompileStatic
 class Application {
     static void main(String[] args) {
         println("Starting Application")
