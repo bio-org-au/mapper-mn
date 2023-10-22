@@ -36,5 +36,5 @@
     </root>
     <logger name="io.micronaut.http.client" level="INFO"/>
     <logger name="io.micronaut.security" level="INFO"/>
-<!--    <logger name="io.micronaut.servlet.http.ServletHttpHandler" level="TRACE"></logger>-->
+    <!--    <logger name="io.micronaut.servlet.http.ServletHttpHandler" level="TRACE"></logger>-->
 </configuration>

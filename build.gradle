@@ -1,6 +1,6 @@
 plugins {
     id "groovy"
-    id "com.github.johnrengelman.shadow" version "5.0.0"
+    id "com.github.johnrengelman.shadow" version "7.1.2"
     id "war"
     id "application"
 }
@@ -24,32 +24,32 @@ dependencies {
     annotationProcessor "io.micronaut.security:micronaut-security-annotations"
     annotationProcessor "io.micronaut:micronaut-inject-java"
     annotationProcessor "io.micronaut:micronaut-validation"
-    compile 'org.codehaus.groovy:groovy-sql:2.5.2'
-    compileOnly "io.micronaut.openapi:micronaut-openapi"
-    compileOnly platform("io.micronaut:micronaut-bom:$micronautVersion")
-    compileOnly "io.micronaut:micronaut-inject-groovy"
+    implementation 'org.codehaus.groovy:groovy-sql:3.0.19'
+    implementation "io.micronaut.openapi:micronaut-openapi"
+    implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
+    implementation "io.micronaut:micronaut-inject-groovy"
     implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
     implementation("io.micronaut.groovy:micronaut-runtime-groovy")
     implementation "io.micronaut:micronaut-validation"
-    implementation("io.micronaut.servlet:micronaut-http-server-tomcat:1.0.2")
+    implementation("io.micronaut.servlet:micronaut-http-server-tomcat")
     implementation "io.micronaut:micronaut-http-client"
     implementation "io.swagger.core.v3:swagger-annotations"
     implementation "io.micronaut.security:micronaut-security-jwt"
-    implementation("io.micronaut.servlet:micronaut-servlet-engine:1.0.2")
+    implementation("io.micronaut.servlet:micronaut-servlet-engine")
     implementation("org.codehaus.janino:janino:3.1.0")
-    runtime 'io.micronaut.sql:micronaut-jdbc-tomcat'
-    runtime 'org.postgresql:postgresql:42.6.0'
-    runtimeOnly "ch.qos.logback:logback-classic:1.2.3"
-    runtime("io.micronaut:micronaut-core:2.2.0")
+    implementation 'io.micronaut.sql:micronaut-jdbc-tomcat'
+    implementation 'org.postgresql:postgresql:42.6.0'
+    implementation "ch.qos.logback:logback-classic:1.2.3"
+    implementation("io.micronaut:micronaut-core")
 
-    testCompileOnly platform("io.micronaut:micronaut-bom:$micronautVersion")
+    testImplementation platform("io.micronaut:micronaut-bom:$micronautVersion")
     testImplementation("org.spockframework:spock-core") {
         exclude group: "org.codehaus.groovy", module: "groovy-all"
     }
     testImplementation "io.micronaut:micronaut-inject-groovy"
     testImplementation "io.micronaut.test:micronaut-test-spock"
     testImplementation "io.micronaut.test:micronaut-test-junit5"
-    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.5.0"
+    testImplementation "org.junit.vintage:junit-vintage-engine:5.5.0"
 }
 
 test.classpath += configurations.developmentOnly

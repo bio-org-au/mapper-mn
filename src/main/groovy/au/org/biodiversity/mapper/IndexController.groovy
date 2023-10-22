@@ -37,11 +37,11 @@ class IndexController {
     @Inject
     DataSource dataSource
 
-    @Property(name = "micronaut.config.files")
-    String configFiles
+//    @Property(name = "micronaut.config.files")
+//    String configFiles
 
-    @Property(name = "mapper.db.url")
-    String dbUrl
+//    @Property(name = "mapper.db.url")
+//    String dbUrl
 
     @PermitAll
     @Produces(MediaType.TEXT_HTML)
